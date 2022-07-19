@@ -1,0 +1,2 @@
+"0","knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)"
+"0","options(digits=3)"

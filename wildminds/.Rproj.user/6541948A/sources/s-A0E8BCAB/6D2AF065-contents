@@ -1,0 +1,70 @@
+
+# Compare Datasets Created Using Chalou's and Alex' Scrips ----------------
+
+
+# Library -----------------------------------------------------------------
+
+library(tidyverse)
+
+
+# Load Data ---------------------------------------------------------------
+# Load Chalou-style data as csv
+chalou.data = read_csv('/Users/Alex/Desktop/ELAN export/Alex Test/Gesture_records_Bossou.csv',
+                       show_col_types = FALSE) %>%
+  arrange(Rec_number) %>%
+  mutate(across(everything(), as.character))
+# Create Alex-style data using the script
+#source("~/extract_ELAN.R")
+alex.data = extract_ELAN(path = '/Users/Alex/Desktop/ELAN export/Alex Test/Bossou_full.csv')
+
+# arrange both dataset and make sure they are based on the same gesture records
+chalou.data = chalou.data %>%
+  filter(Rec_number %in% alex.data$Rec_number) %>%
+  arrange(Rec_number)
+alex.data = alex.data %>%
+  filter(Rec_number %in% chalou.data$Rec_number) %>%
+  distinct(Rec_number, .keep_all = T) %>%
+  arrange(Rec_number)
+
+# make sure they have the same length and width
+dim(chalou.data) == dim(alex.data)
+# TRUE TRUE
+
+# make sure the Rec_number is the same
+identical(chalou.data$Rec_number, alex.data$Rec_number)
+# TRUE
+
+# compare all columns and pop out the ones with problems
+comparison <- lapply(colnames(chalou.data), function(x){
+  id.yes <- identical(as.vector(unlist(chalou.data[,x])), as.vector(unlist(alex.data[,x])))
+  id.without.na <- mean(as.vector(unlist(chalou.data[,x])) == as.vector(unlist(alex.data[,x])), na.rm = T) == 1
+  id.differences <-
+    cbind(communication = alex.data$Com_number,
+          recording = alex.data$Rec_number,
+          chalou = unlist(chalou.data[,x], use.names = FALSE),
+          alex = unlist(alex.data[,x], use.names = FALSE)) %>%
+    data.frame() %>%
+    mutate(same = chalou == alex) %>%
+    filter(!(same)|is.na(same))
+  id.differences2 <- id.differences %>%
+    filter(!(is.na(chalou) & is.na(alex)))
+  id.with.na <- nrow(id.differences2) == 0
+
+  return(list(
+    column = x,
+    id.yes = id.yes,
+    id.with.na = id.with.na,
+    id.without.na = id.without.na,
+    id.differences = id.differences2
+  ))
+})
+names(comparison) = colnames(chalou.data)
+
+comparison.transpose = purrr::transpose(comparison)
+
+# pop out the differences between the two datasets
+comparison.transpose$id.differences[!(unlist(comparison.transpose$id.with.na))]
+
+### remaining differences:
+# GA_end_T: in Chalou's script, sometimes set to NA, even though Alex' script finds GA_stop_in; seems to happen where MAU_ex before GA_stop_in
+# Latency_2: in Chalou's script, sometimes set to start of next Gesture Record if that Gesture Record is AFTER Latency_2

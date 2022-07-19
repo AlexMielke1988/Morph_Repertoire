@@ -1,0 +1,60 @@
+Package: wildminds
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Authors@R: c(
+    person(given = "Alex",
+           family = "Mielke",
+           role = c("aut", "cre"),
+           email = "mielke.alexand@gmail.com"))
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License:  Apache License (>= 2.0)
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
+Depends:
+    R (>= 4.0.0)
+Imports: 
+    dplyr,
+    dendextend,
+    brms,
+    ClusterR,
+    FactoMineR,
+    Matrix,
+    Rfast,
+    arrangements,
+    factoextra,
+    ggdendro,
+    ggplot2, 
+    ggraph,
+    graphics,
+    grDevices,
+    igraph,
+    lme4,
+    lubridate,
+    magrittr,
+    mclust,
+    modelr,
+    picante,
+    plotly,
+    purrr,
+    quanteda,
+    quanteda.textstats,
+    reshape2,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    tidytext,
+    tidyfast,
+    tm,
+    umap,
+    utils,
+    readr,
+    rlang,
+    rstanarm,
+    parallel,
+    doParallel
+NeedsCompilation: yes
+ByteCompile: true

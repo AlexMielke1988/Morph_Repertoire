@@ -1,0 +1,4 @@
+memory profiling: GC profiling: line profiling: sample.interval=10000
+:3776841:8560767:246240736:2586:"chr_unserialise_unicode" "initialize" "DataMask$new" "filter_rows" "filter.data.frame" "profvis::profvis" 
+:3797816:8577035:253185800:3411:"FUN" "lapply" "tbl_subset_row" "[.tbl_df" "profvis::profvis" 
+:3822763:8590890:259278152:3007:"unclass" "profvis::profvis" 

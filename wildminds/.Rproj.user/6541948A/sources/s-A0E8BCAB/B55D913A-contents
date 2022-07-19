@@ -1,0 +1,905 @@
+---
+title: "Compositionality"
+author: "Alex Mielke, Cat Hobaiter"
+date: "`r format(Sys.time(), '%d -%m -%Y')`"
+output:
+  html_document:
+    toc: yes
+    df_print: paged
+  pdf_document:
+    toc: yes
+    fig_width: 8
+    fig_height: 6
+    fig_caption: yes
+    number_sections: yes
+fontsize: 12pt
+spacing: double
+fig_caption: yes
+indent: yes
+geometry: margin=1in
+mainfont: Calibri
+sansfont: Calibri
+monofont: Calibri
+editor_options:
+  chunk_output_type: console
+  markdown:
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, cache = TRUE)
+options(digits=3)
+```
+
+# Rationale
+
+One of the hallmarks of human communication is compositionality: combining two meaningful elements leads to a change in meaning from either of the two elements in isolation. This has been shown to some small degree in some bird vocalisations, but is otherwise unexplored in animal communication, including in intentional ape gestural communication. Here, we look for bi-gram sequences of gesture actions (transition from gesture A to gesture B) in ape gestures within the Wild Minds dataset to see if we can find some transitions between elements that would fulfil the requirements to be called compositional.
+While sequences in animal communication are fairly common, no clear guidance exists on how we would establish compositionality based on probabilities rather than experimental manipulation and playbacks. Here, I will build up certain minimal requirements that should be fulfilled in a dataset. Transitions of elements in sequences could just be random association of the elements that are specific to the context (e.g., elaboration). There could also be standard combinations of gestures that are the same across all contexts - for example, if one emphasises the meaning of the other while having the same expected response. However, they could also be meaningful composites that change the meaning of its constituent elements and are used with different goals and expected outcomes. The last (compositionality) would probably require transitions of elements to fulfil the following three (or four) requirements:
+
+1.  reliability - the probability of the transition is higher than
+expected from the constituent elements and the same transition
+outside the context
+
+2.  non-commutativity - direction matters, so A -> B should have a
+different probability than B -> A
+
+3.  compositionality - the use of the AB transition should differ from
+the use of A and the use of B separately
+
+4.  *difference in response - the use of the combination leads to a different response from the receiver or has a different success probability, no matter which 'goal' has been assigned. I will leave this one out for now; we'll need to see how to possibly test this.*
+
+We can use probabilities to test these assumptions:
+
+**Reliability:**
+
+-   within context: $P(A \mid B) > P(A)| P(B)$)
+
+-   $P(A \mid B)$ within context > $P(A \mid B)$ across contexts
+
+**Non-commutativity:**
+
+-   within context: $P(A \mid B) =|= P(B \mid A)$)
+
+**Compositionality:**
+
+-   $P(context \mid AB)$ higher for this context than expected
+
+-   $P(context \mid AB)$ > $P(context \mid A)$ \| $P(context \mid B)$
+
+
+
+**Analytical approach**
+
+*Preparation*
+
+-   Get sequences with information on Goal or Context
+
+-   Go through each Goal or Context with a certain number of sequences
+
+-   Establish probabilities of single elements within context
+
+-   Establish probabilities of transitions within context, with direction
+
+-   Do for all contexts so we can go back to it later
+
+*Reliability*
+
+-   Test whether probability of transition is higher than expected from constituent elements within context - bootstrap (randomly shuffling all elements within the context/within sequences)
+
+-   Test whether probability of transition is higher than expected from constituent elements across contexts via bootstrap (randomly shuffling all elements within the context/within sequences)
+
+-   Test whether probability of transition is higher within the context than across all contexts (both for all other contexts and only those in which the transition occurs at least once)
+
+*Non-commutativity*
+
+-   Test which transitions show non-commutativity within contexts by comparing P(A->B) with P(B->A) through bootstraps
+
+-   Randomise order of elements within sequences test whether probabilities of P(A->B) and P(B->A) exceed those
+
+*Compositionality*
+
+-   Establish specificity of transition to this context (P(context\|A->B)
+
+-   Test whether specificity is higher than specificity of constituent elements for the same context - both for those elements when occurring at all (including in sequences) and when they occur on their own
+
+
+*Notes:* **Need to decide on: which gesture actions to include, how to lump contexts, which cutoffs to use, how to determine which contexts to use, what to do about Goal_met, modifiers, Goal vs Outcome etc **
+*Notes:* **Also need to check if it would be better to do the first and third analysis based on the level of the bigram without directional information, i.e., treating AB and BA the same **
+
+
+# Preparation
+
+## Libraries
+Let's start by loading the libraries that will be important, and the *wildminds* package:
+
+```{r libraries}
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(doParallel)
+library(parallel)
+library(kableExtra)
+devtools::load_all("C:/Users/Alex/Documents/GitHub/Gestures/R package/wildminds/R/")
+
+```
+
+Cool, now let's load the data and do some cleaning.
+
+
+## Read data into object
+
+First, we read the dataset into an object called 'gesture.data'. This
+contains the uncleaned data as it is extracted from Filemaker.
+
+```{r read_data, echo = T}
+gesture.data <-
+  read_xlsx('C:/Users/Alex/Documents/GitHub/Gestures/Data/GOdatabase_18112021.xlsx',
+            na = '')
+```
+
+## Add video information
+
+Before we start with looking at the repertoire, we need to clean the data a bit. There are currently a number of issues with the dataset. Information about the field site, date, coder identity, etc, are currently only coded within the clip name and the communication code. Therefore, I have added some helper functions that extract that information and allow users to add it to their data frame. This is currently still hampered by the fact that the clip names are a disaster and that the bonobos do not follow the same recording number format as everything else, and also use different names for gesture actions and some modifiers. I have currently excluded them for that reason - the dataset contains information from four chimp field groups (Bossou, Issa, Waibira, Sonso) and the mountain gorillas. We will exlude the gorillas later for the sake of this analysis.
+
+```{r video_info, echo=T}
+
+# Deconstruct clip name ---------------------------------------------------
+
+gesture.data$Date <- date_from_clip(gesture.data$Clip_name)
+#gesture.data$Clip_nr <- clipnr_from_clip(gesture.data$Clip_name)
+
+# Get observer, field site, and group from communication numbers ----------
+
+gesture.data$Social_unit <- 
+  info_from_Com_number(gesture.data$Com_number, output = 'group')
+gesture.data$Coder <- 
+  info_from_Com_number(gesture.data$Com_number, output = 'coder')
+gesture.data$Species <- 
+  info_from_Com_number(gesture.data$Com_number, output = 'species')
+
+### We'll remove the bonobos for now because Kirsty is using different goals etc
+gesture.data <- gesture.data %>% 
+  filter(Species!='BNB') %>% 
+  filter(!str_detect(Clip_name, 'Wamba')) %>% 
+  filter(!str_detect(Clip_name, 'Kokolopori'))
+
+```
+
+## Clean dataset
+
+The data, as extracted from the database, still have the formatting that was used in ELAN. This is explained in more detail in the *Repertoire* Markdown. We decide here to get cleaned values and column names, and exclude cases where the gesture action is unclear, but keep cases where sender and receiver are not identified.
+
+```{r clean_data, echo=T}
+
+clean.data <- clean_function(data = gesture.data,
+                             clean.values = TRUE, 
+                             clean.names = TRUE, 
+                             exclude.unknown = FALSE, 
+                             exclude.cases = TRUE)
+```
+
+After we do this, many of the columns of the dataset will still have a rather large number of levels, many of which do not have a clear meaning for us or provide unnecessary detail. The *reduce_levels* function removes some of this unnecessary information. We have to decide what to do with all the different goals and gesture actions, many of which are quite rare and would be more appropriately combined with each other. For now, I lump them based on similarity (e.g., *Hitting* becomes *Hit*; *Play start*, *Play continue* and *Play change* become play, etc). Needs to be decided on.
+
+```{r reduce_levels, echo=T}
+
+clean.data.reduced <- reduce_levels(data = clean.data, 
+                                    reduce.goals = TRUE,
+                                    reduce.gestures = TRUE)
+```
+
+
+## Detect possible errors
+
+Some gesture actions are restricted by the protocol to only take certain values during coding. However, for this project, that might not matter - we will currently not use the modifiers for anything, so I will not remove cases for now
+
+## Sequence information
+
+The first important step will be to extract the sequences from the dataset. The function *detect_sequences* goes through gesture datasets, detects sequences based on the time between elements within the same Sender/Receiver pair and gives a summary data frame and a sequence list that can be associated with additional information, such as the Goal or Context. Sequences are defined as any consecutive gestures where one follows within x seconds (set via the *steps* parameter) after the previous one, so we are not tied to the 1sec rule. Within the resulting object, we find additional information in the *sequence_summary* element, while the *element_bout* elements contains vectors with all the gesture actions within that sequence. The user can define the number of seconds between gesture actions that defines a sequences (currently set to 2, i.e. NOT the same as the group has been using), whether the column names are original or renamed previously, and whether the duration between gestures should be defined by the 'mau' or the 'full' gesture action. Here, we go with the full gesture duration. I extend the 1-Second-Rule because every additional second increases the number of sequences we can work with. For the final analysis, I would repeat the analysis with a number of different durations.
+
+```{r detect_sequences, echo = TRUE}
+sequence_info <- detect_sequences(data = clean.data.reduced, 
+                                  steps = 2, 
+                                  col_names = 'renamed', 
+                                  duration_type = 'full')
+element_bout <- sequence_info$element_bout
+additional_info <- sequence_info$sequence_summary %>% 
+  select(Sequence_identifier, 
+         Social_unit, 
+         Goals,
+         Signaller,
+         Recipient,
+         Sequence_length,
+         Exclude_any)
+```
+
+## Remove sequences
+Let's remove some sequences based on a number of rules. First, for now, let's remove some groups and just keep the chimps. Let's also remove those sequences where no Goal could be established. Additional rules can be established later - especially based on whether the whole sequence was observed.
+
+```{r remove_sequences, echo = TRUE}
+remove_sequences <- 
+  !(additional_info$Social_unit %in% c('Bwindi')) &
+  !(additional_info$Goals %in% c('Unknown', 'NotApplicable', 'Other'))
+
+element_bout <- element_bout[remove_sequences]
+additional_info <- additional_info[remove_sequences,]
+```
+
+## Plot sequence lengths
+Now we are left with `r nrow(additional_info)` sequences, containing `r length(unlist(element_bout))` elements in bouts of `r range(additional_info$Sequence_length)` elements. Here is a graph of the distribution of sequence lengths:
+
+```{r sequence_length_hist,  fig.align='center', fig.width=12, fig.height=8, message=F, echo = TRUE, cache = FALSE, fig.cap = "Histogram of sequence lengths."}
+
+ggplot(additional_info, 
+       aes(x = Sequence_length)) + 
+  geom_histogram() +
+  theme_classic() +
+  xlab('Sequence Length') +
+  ylab('Count')
+
+```
+
+As we can see, sequences are fairly rare in this dataset. Only `r mean(additional_info$Sequence_length != 1) *100`% of occurrences are sequences of more than one element. For subsequent analyses, it will be useful to analyse only contexts where sequences occur at all - no point going through those that have only single gestures. Which contexts will we be looking at? We set a cutoff, where a context has to have at least x sequences with more than one elements to be of interest.
+
+```{r determine_contexts_of_interest}
+cutoff <- 20
+
+contexts_of_interest <- additional_info %>% 
+  filter(Sequence_length > 1) %>% 
+  group_by(Goals) %>% 
+  summarise(cases = n()) %>% 
+  ungroup() %>% 
+  filter(cases > cutoff) %>% 
+  select(Goals) %>% 
+  unlist(use.names = FALSE) %>% 
+  suppressMessages()
+
+```
+
+The following goals make the cutoff of at least `r print(cutoff)` sequences: `r paste(contexts_of_interest, collapse = ', ')`.
+
+# Analysis
+
+## Preparations
+
+Let's start by assigning all data to their respective Goal, and calculating the occurrence probabilities of transitions within each context.
+
+```{r probs_by_context, echo = TRUE}
+
+probs_by_context <- lapply(contexts_of_interest, function(x){
+  # select only sequences for this context
+  element_bout_context <- element_bout[additional_info$Goals == x]
+  
+  # calculate basic occurrences of antecedent and consequent using transitions_frame
+  transitions <- transitions_frame(elem.bout = element_bout_context,
+                                   elements = NULL)
+  
+  # calculate transition probabilities between elements
+  # how often does A lead to B
+  transitions$observed.sum <- transition_info(
+    antecedent = transitions$antecedent,
+    consequent = transitions$consequent,
+    elem.bout = element_bout_context,
+    it = 1,
+    measure = c("sum"),
+    ran.method = 'random'
+  )
+  
+  # probability of A leading to B
+  transitions$conditional.prob <- transition_info(
+    antecedent = transitions$antecedent,
+    consequent = transitions$consequent,
+    elem.bout = element_bout_context,
+    it = 1,
+    measure = c("conditional"),
+    ran.method = 'random'
+  ) %>% round(3)
+  
+  # probability of A then B
+  transitions$joint.prob <- transition_info(
+    antecedent = transitions$antecedent,
+    consequent = transitions$consequent,
+    elem.bout = element_bout_context,
+    it = 1,
+    measure = c("joint.prob"),
+    ran.method = 'random'
+  ) %>% round(3)
+  
+  single_elements <- element_combinations(elem.bout = element_bout_context,
+                                          lvl = 0,
+                                          it = 1,
+                                          ran.method = 'random')
+  
+  return(list(
+    transitions = transitions,
+    single_elements = single_elements,
+    additional_info = additional_info[additional_info$Goals == x,],
+    element_bout_context = element_bout_context
+  ))
+})
+
+names(probs_by_context) <- contexts_of_interest
+
+```
+
+Here is what the data roughly looks like for the transitions:
+
+```{r}
+kable(
+  head(probs_by_context[[1]]$transitions %>% 
+         select(-prob.antecedent, 
+                - prob.consequent), 
+       10),
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Top rows of the probs_by_context function results"
+) %>% 
+  kable_styling(font_size = 9)
+```
+
+
+## Reliability
+
+Now we got the list of all the probabilities within all the contexts, let's go through and make the necessary comparisons. For the reliability of the combinations, we had established the following procedure:
+
+-   Test whether probability of transition is higher than expected from constituent elements within context
+
+-   Test whether probability of transition is higher than expected from constituent elements across contexts
+
+-   Test whether probability of transition is higher within the context than across all contexts
+
+
+### Transition probability compared to individual probabilities within contexts
+For the first comparison, we compare the observed transition probabilities of two elements with permutation expected probabilities of each transition based on its constituent elements. To this end, we randomise the occurrences of individual elements within a context while keeping the number of elements within sequences the same. Thus, the null hypothesis is that transitions are the result of random combinations of elements within a context.
+
+```{r reliability_1, echo = TRUE}
+
+
+
+reliability_1 <- lapply(1:length(probs_by_context), function(x) {
+  # this takes forever, so parallelise randomisation
+  
+  n_cores <- detectCores() - 1
+  
+  # extract data
+  context_transitions <- probs_by_context[[x]]$transitions
+  context_single_elements <- probs_by_context[[x]]$single_elements
+  context_additional_info <- probs_by_context[[x]]$additional_info
+  context_element_bout <- probs_by_context[[x]]$element_bout_context
+  
+  antecedent <- context_transitions$antecedent
+  consequent <- context_transitions$consequent
+  
+  # create cluster for parallelization
+  mycluster <- makeCluster(n_cores, type = "PSOCK")
+  # export the relevant information to each core
+  clusterExport(
+    cl = mycluster,
+    c(
+      "context_transitions",
+      "context_single_elements",
+      "context_additional_info",
+      "context_element_bout",
+      "antecedent",
+      "consequent",
+      "x",
+      "element_bout",
+      "transition_info",
+      "transitions_frame",
+      "elem_bout_matrix",
+      "unlist_list",
+      "unlist_vector"
+    ),
+    envir = environment()
+  )
+  registerDoParallel(mycluster)
+  clusterEvalQ(mycluster, {
+    library(tidyverse)
+    library(tidyfast)
+    library(tidytext)
+  })
+  
+  # calculate probabilities through bootstraps
+  ran_sums <- 
+    parLapply(X = 1:1000, cl = mycluster, function(y) {
+      # randomise elements within contexts
+      ran_element_bout <- context_element_bout
+      ran_element_bout <-
+        lapply(ran_element_bout, function(k) {
+          sample(unlist(ran_element_bout, 
+                        recursive = FALSE, 
+                        use.names = FALSE), 
+                 size = length(k))
+        })
+      
+      # count occurrences of transitions in these data
+      ran.sum <- transition_info(
+        antecedent = antecedent,
+        consequent = consequent,
+        elem.bout = ran_element_bout,
+        it = 1,
+        measure = c("sum"),
+        ran.method = 'random'
+      )
+      # turn NA into 0
+      ran.sum <-
+        ifelse(is.na(ran.sum), 0, ran.sum)
+      return(ran.sum)
+    })
+  stopCluster(mycluster)
+  
+  # bind permutations together
+  ran_sums <- ran_sums %>%
+    bind_cols() %>%
+    suppressMessages()
+  
+  # calculate pvalues etc
+  significance.table <- context_transitions %>%
+    select(-prob.antecedent, -prob.consequent, -joint.prob) %>%
+    mutate(
+      boot_expected = rowMeans(ran_sums, na.rm = T),
+      boot_pvalue = rowMeans(ran_sums >= context_transitions$observed.sum, na.rm = T),
+      #boot_prob.increase = observed.sum / rowMeans(ran_sums, na.rm = T),
+      context = names(probs_by_context)[x]
+    )
+  
+  return(significance.table)
+})
+
+# assign names
+names(reliability_1) <- probs_by_context
+
+# save only those bigrams with significance below x and more than y occurrences
+reliability_1_significant <- lapply(reliability_1, function(x) {
+  x %>%
+    filter(boot_pvalue <= 0.05 &
+             observed.sum >= 3)
+}) %>% bind_rows %>%
+  data.frame %>% 
+  select(-conditional.prob, 
+         -count.antecedent,
+         -count.consequent)
+
+kable(
+  reliability_1_significant,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Bigrams that occur above expected probability within their context"
+)%>% 
+  kable_styling(font_size = 9)
+
+```
+
+As we can see, `r length(unique(reliability_1_significant$context))` goals have at least one transition that could be considered to be above-expected from the basic dyadic probabilities of the two constituent elements.
+
+### Transition probability compared to transition probability across contexts
+For the second comparison, we compare the observed transition probabilities of two elements with permutation expected probabilities of each transition based on its constituent elements across all contexts. To this end, we randomise the occurrences of individual elements across contexts while keeping the number of elements within sequences the same. We then randomly select the same number of sequences as in the test context. Thus, the null hypothesis is that transitions are the result of random combinations of elements across contexts.
+
+```{r reliability_2, echo = TRUE}
+# this takes forever, so parallelise randomisation
+
+n_cores <- detectCores() - 1
+
+reliability_2 <- lapply(1:length(probs_by_context), function(x) {
+  
+  # extract data
+  context_transitions <- probs_by_context[[x]]$transitions
+  context_single_elements <- probs_by_context[[x]]$single_elements
+  context_additional_info <- probs_by_context[[x]]$additional_info
+  context_element_bout <- probs_by_context[[x]]$element_bout_context
+  
+  antecedent <- context_transitions$antecedent
+  consequent <- context_transitions$consequent
+  
+  # create cluster for parallelization
+  mycluster <- makeCluster(n_cores, type = "PSOCK")
+  # export the relevant information to each core
+  clusterExport(
+    cl = mycluster,
+    c(
+      "context_transitions",
+      "context_single_elements",
+      "context_additional_info",
+      "context_element_bout",
+      "antecedent",
+      "consequent",
+      "x",
+      "element_bout",
+      "transition_info",
+      "transitions_frame",
+      "elem_bout_matrix",
+      "unlist_list",
+      "unlist_vector"
+    ),
+    envir = environment()
+  )
+  registerDoParallel(mycluster)
+  clusterEvalQ(mycluster, {
+    library(tidyverse)
+    library(tidyfast)
+    library(tidytext)
+  })
+  
+  # calculate probabilities through bootstraps
+  ran_sums <- parLapply(X = 1:1000,
+                        cl = mycluster,
+                        function(y) {
+                          ran_element_bout <- element_bout
+                          ran_element_bout <-
+                            lapply(ran_element_bout, function(k) {
+                              sample(unlist(ran_element_bout, use.names = FALSE), size = length(k))
+                            })
+                          
+                          ran_element_bout <-
+                            ran_element_bout[sample(seq_along(ran_element_bout), 
+                                                    size = length(context_element_bout))]
+                          
+                          ran.sum <- transition_info(
+                            antecedent = antecedent,
+                            consequent = consequent,
+                            elem.bout = ran_element_bout,
+                            it = 1,
+                            measure = c("sum"),
+                            ran.method = 'random'
+                          )
+                          ran.sum <-
+                            ifelse(is.na(ran.sum), 0, ran.sum)
+                          return(ran.sum)
+                        })
+  stopCluster(mycluster)
+  
+  ran_sums <- ran_sums %>%
+    bind_cols() %>%
+    suppressMessages()
+  
+  significance.table <- context_transitions %>%
+    select(-prob.antecedent,-prob.consequent,-joint.prob) %>%
+    mutate(
+      boot_expected = rowMeans(ran_sums, na.rm = T),
+      boot_pvalue = rowMeans(ran_sums >= context_transitions$observed.sum, na.rm = T),
+      #boot_prob.increase = observed.sum / rowMeans(ran_sums, na.rm = T),
+      context = names(probs_by_context)[x]
+    )
+  
+  return(significance.table)
+})
+
+names(reliability_2) <- probs_by_context
+
+reliability_2_significant <- lapply(reliability_2, function(x) {
+  x %>%
+    filter(boot_pvalue <= 0.05 &
+             observed.sum >= 3)
+}) %>% bind_rows %>%
+  data.frame %>% 
+  select(-conditional.prob, 
+         -count.antecedent,
+         -count.consequent)
+
+kable(
+  reliability_2_significant,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Bigrams that occur above expected probability across contexts"
+)%>% 
+  kable_styling(font_size = 9)
+```
+
+Thus, we see that there is still a large number of bigram transitions that occur at higher frequencies than expected if using the overall probability of occurrence across all contexts.
+
+### Transition probability compared to individual probabilities across contexts
+For the third comparison, we compare the observed transition probabilities of two elements with bootstrapped expected probabilities of each transition across all contexts. To this end, we randomly select subsets of the full dataset across contexts. Thus, the null hypothesis is that transitions are constant across all contexts.
+
+
+```{r reliability_3, echo = TRUE}
+
+
+reliability_3 <- lapply(1:length(probs_by_context), function(x) {
+  # extract data
+  context_transitions <- probs_by_context[[x]]$transitions
+  context_single_elements <- probs_by_context[[x]]$single_elements
+  context_additional_info <- probs_by_context[[x]]$additional_info
+  context_element_bout <- probs_by_context[[x]]$element_bout_context
+  
+  antecedent <- context_transitions$antecedent
+  consequent <- context_transitions$consequent
+  
+  # create cluster for parallelization
+  mycluster <- makeCluster(n_cores, type = "PSOCK")
+  # export the relevant information to each core
+  clusterExport(
+    cl = mycluster,
+    c(
+      "context_transitions",
+      "context_single_elements",
+      "context_additional_info",
+      "context_element_bout",
+      "antecedent",
+      "consequent",
+      "x",
+      "element_bout",
+      "transition_info",
+      "transitions_frame",
+      "elem_bout_matrix",
+      "unlist_list",
+      "unlist_vector"
+    ),
+    envir = environment()
+  )
+  registerDoParallel(mycluster)
+  clusterEvalQ(mycluster, {
+    library(tidyverse)
+    library(tidyfast)
+    library(tidytext)
+  })
+  
+  # calculate probabilities through bootstraps
+  ran_sums <- parLapply(X = 1:1000,
+                        cl = mycluster,
+                        function(y) {
+                          ran_element_bout <- element_bout
+                          ran_element_bout <-
+                            ran_element_bout[sample(
+                              seq_along(ran_element_bout),
+                              replace = TRUE,
+                              size = length(context_element_bout)
+                            )]
+                          
+                          ran.sum <- transition_info(
+                            antecedent = antecedent,
+                            consequent = consequent,
+                            elem.bout = ran_element_bout,
+                            it = 1,
+                            measure = c("sum"),
+                            ran.method = 'random'
+                          )
+                          ran.sum <-
+                            ifelse(is.na(ran.sum), 0, ran.sum)
+                          return(ran.sum)
+                        })
+  stopCluster(mycluster)
+  
+  
+  ran_sums <- ran_sums %>%
+    bind_cols() %>%
+    suppressMessages()
+  
+  significance.table <- context_transitions %>%
+    select(-prob.antecedent,-prob.consequent,-joint.prob) %>%
+    mutate(
+      boot_expected = rowMeans(ran_sums, na.rm = T),
+      boot_pvalue = rowMeans(ran_sums >= context_transitions$observed.sum, na.rm = T),
+      #boot_prob.increase = observed.sum / rowMeans(ran_sums, na.rm = T),
+      context = names(probs_by_context)[x]
+    )
+  
+  return(significance.table)
+})
+
+names(reliability_3) <- probs_by_context
+
+reliability_3_significant <- lapply(reliability_3, function(x) {
+  x %>%
+    filter(boot_pvalue < 0.05 &
+             observed.sum > 3)
+}) %>% bind_rows %>%
+  data.frame %>% 
+  select(-conditional.prob, 
+         -count.antecedent,
+         -count.consequent)
+
+kable(
+  reliability_3_significant,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Bigrams that occur more in the context than expected across contexts"
+)%>% 
+  kable_styling(font_size = 9)
+
+
+```
+
+
+### Combine the three 
+
+Finally, we combine the three previous analyses to determine which bigrams in which context meet all requirements and can be considered to be reliable transitions rather than randomly arising combinations.
+
+```{r reliability_combine}
+
+reliability_significant <- bind_rows(reliability_1_significant,
+                                     reliability_2_significant,
+                                     reliability_3_significant) %>% 
+  group_by(antecedent,
+           consequent,
+           context) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  filter(count == 3) %>% 
+  data.frame() %>% 
+  select(context, antecedent, consequent) %>% 
+  arrange(context)
+
+kable(
+  reliability_significant,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Bigrams that occur reliably and non-randomly in a context"
+)%>% 
+  kable_styling(font_size = 9)
+```
+
+Thus, we have `r nrow(reliability_significant)` transitions that are significant across all three requirements, representing `r length(unique(reliability_significant$context))` out of `r length(contexts_of_interest)` contexts of interest.
+
+
+
+## Non-commutativity
+
+Now that we have checked which transitions occur more often in some contexts than would be expected (based on the element probabilities within and across contexts and the overall transition probability), we turn to a second important element of compositionality: element transitions should be non-commutative, with A->B having different probabilities than B->A within contexts. To test this, we randomly assign order of elements within each sequence and test whether the reciprocity ($\frac{A->B}{B->A}$) of the observed data is different from what would be expected if directionality was random.
+
+```{r conditionality, echo = TRUE}
+
+commutativity <- lapply(1:length(probs_by_context), function(x) {
+  
+  # extract data
+  context_transitions <- probs_by_context[[x]]$transitions
+  context_single_elements <- probs_by_context[[x]]$single_elements
+  context_additional_info <- probs_by_context[[x]]$additional_info
+  context_element_bout <- probs_by_context[[x]]$element_bout_context
+  
+  # use conditionality() function
+  significance.table <- 
+    conditionality(elem.bout = context_element_bout, 
+                   it = 1, 
+                   cores = 10, 
+                   trials = 1000, 
+                   cutoff = 0, 
+                   ran.method = 'random') %>% 
+    mutate(context = names(probs_by_context)[x])
+  
+  return(significance.table)
+})
+
+names(commutativity) <- probs_by_context
+
+commutativity_significant <- lapply(commutativity, function(x) {
+  x %>%
+    filter(p.recip <= 0.05 &
+             joint.sum >= 3)
+}) %>% 
+  bind_rows %>%
+  data.frame
+
+commutativity_significant$antecedent <- ifelse(commutativity_significant$conditional.AtoB >= commutativity_significant$conditional.BtoA, commutativity_significant$elementA, commutativity_significant$elementB)
+commutativity_significant$consequent <- ifelse(commutativity_significant$conditional.BtoA >= commutativity_significant$conditional.AtoB, commutativity_significant$elementA, commutativity_significant$elementB)
+
+commutativity_significant <- commutativity_significant %>% 
+  select(context, antecedent, consequent) %>% 
+  arrange(context)
+
+kable(
+  commutativity_significant,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Bigrams that show significant difference in direction of usage"
+)%>% 
+  kable_styling(font_size = 9)
+
+```
+
+As we see, `r nrow(commutativity_significant)` transitions are significantly one-directional.
+
+## Compositionality
+Now we have established that there are some transitions that are reliably observed within contexts and are not explained purely by their constituent elements; and there is a small number of transitions that seems to be non-commutative. Let's see whether we can establish if there are combinations that occur in different contexts than their constituents. For this, we bootstrap the data, establish the specificity of A and B for the context in question ( $P(context|A)$ & $P(context|B)$), and select those bigrams that significantly exceed both the single specificities.
+
+```{r compositionality, echo = TRUE}
+
+compositionality <- lapply(1:length(probs_by_context), function(x) {
+  significance.table <- 
+    sequence_context_comparison(
+      elem.bout = element_bout,
+      compare_column = additional_info$Goals,
+      test.condition = names(probs_by_context)[x], 
+      null.condition = NULL, 
+      threshold = 0, 
+      trials = 1000)
+  
+  return(significance.table)
+})
+
+compositionality_significant <- lapply(compositionality, function(x) {
+  x %>%
+    filter(antecedent_pvalue <= 0.05 &
+             consequent_pvalue <= 0.05 &
+             test.count >= 3)
+}) %>% 
+  bind_rows %>%
+  data.frame %>% 
+  select(context, antecedent, consequent) %>% 
+  arrange(context)
+
+kable(
+  compositionality_significant,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Bigrams that show higher specificity of context than either single element"
+)%>% 
+  kable_styling(font_size = 9)
+```
+
+Here, we end up with `r nrow(compositionality_significant)` transitions.
+
+## Compare Results
+
+Let's see which transitions fulfil all three requirements:
+
+```{r results, echo = TRUE}
+
+all_req <- bind_rows(reliability_significant,
+          commutativity_significant,
+          compositionality_significant) %>% 
+  group_by(antecedent,
+           consequent,
+           context) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  filter(count >= 3) %>% 
+  data.frame() %>% 
+  select(-count) %>% 
+  select(context, antecedent, consequent) %>% 
+  arrange(context)
+
+kable(
+  all_req,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Transitions and contexts that fulfill all three requirements and occur at least 3 times"
+)%>% 
+  kable_styling(font_size = 9)
+
+```
+
+Those are the context/bigram combinations that could be considered commutative. However, we will need to evaluate them in detail, and check if there are further candidates, before being certain.
+
+How many fulfil the reliability and compositionality conditions (indicating that the combination changes meaning but the directionality might not be so relevant)?
+
+```{r results_two, echo = TRUE}
+
+two_req <- bind_rows(reliability_significant,
+          compositionality_significant) %>% 
+  group_by(antecedent,
+           consequent,
+           context) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  filter(count >= 2) %>% 
+  data.frame() %>% 
+  select(-count) %>% 
+  select(context, antecedent, consequent) %>% 
+  arrange(context)
+
+kable(
+  two_req,
+  row.names = F, 
+  format = 'html',
+  align = "c",
+  booktabs = T,
+  caption = "Transitions and contexts that fulfill two requirements and occur at least 3 times"
+)%>% 
+  kable_styling(font_size = 9)
+
+```

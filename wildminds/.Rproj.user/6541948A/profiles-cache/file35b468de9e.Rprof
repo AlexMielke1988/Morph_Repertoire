@@ -1,0 +1,5 @@
+memory profiling: GC profiling: line profiling: sample.interval=10000
+:3742291:8546506:235386536:0:"Rprof" "profvis::profvis" 
+#File 1: <expr>
+:3773749:8574302:246223712:2812:"findCenvVar" "getInlineInfo" "tryInline" "cmpCall" "cmp" "h" "tryInline" "cmpCall" "cmp" "h" "tryInline" "cmpCall" "cmp" "h" "tryInline" "cmpCall" "cmp" "cmpForBody" "h" "tryInline" "cmpCall" "cmp" "genCode" "compile" "compiler:::tryCompile" 1#18 "profvis::profvis" 
+:3799589:8593923:254682176:3966:"map2" "imap" "filter_rows" "filter.data.frame" "profvis::profvis" 

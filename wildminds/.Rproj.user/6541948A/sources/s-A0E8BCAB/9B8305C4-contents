@@ -1,0 +1,6 @@
+group_test <- cluster_group_comparison(
+  group = clean.data.reduced$Social_unit, 
+  test.groups = c('Sonso', 'Waibira'),
+  gesture.action = g.data$Gesture_record, 
+  cluster = NULL, 
+  modifier.data = g.data[,-1])

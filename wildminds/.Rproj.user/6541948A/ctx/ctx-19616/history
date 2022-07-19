@@ -1,0 +1,512 @@
+consequent = transitions$consequent,
+elem.bout = element_bout_context,
+it = 1,
+measure = c("joint.prob"),
+ran.method = 'random'
+) %>% round(3)
+single_elements <- element_combinations(elem.bout = element_bout_context,
+lvl = 0,
+it = 1,
+ran.method = 'random')
+return(list(
+transitions = transitions,
+single_elements = single_elements,
+additional_info = additional_info[additional_info$Goals == x,],
+element_bout_context = element_bout_context
+))
+})
+names(probs_by_context) <- contexts_of_interest
+# Chunk 12
+kable(
+head(probs_by_context[[1]]$transitions %>%
+select(-prob.antecedent,
+- prob.consequent),
+10),
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Top rows of the probs_by_context function results"
+) %>%
+kable_styling(font_size = 9)
+# Chunk 13: reliability_1
+reliability_1 <- lapply(1:length(probs_by_context), function(x) {
+# this takes forever, so parallelise randomisation
+n_cores <- detectCores() - 1
+# extract data
+context_transitions <- probs_by_context[[x]]$transitions
+context_single_elements <- probs_by_context[[x]]$single_elements
+context_additional_info <- probs_by_context[[x]]$additional_info
+context_element_bout <- probs_by_context[[x]]$element_bout_context
+antecedent <- context_transitions$antecedent
+consequent <- context_transitions$consequent
+# create cluster for parallelization
+mycluster <- makeCluster(n_cores, type = "PSOCK")
+# export the relevant information to each core
+clusterExport(
+cl = mycluster,
+c(
+"context_transitions",
+"context_single_elements",
+"context_additional_info",
+"context_element_bout",
+"antecedent",
+"consequent",
+"x",
+"element_bout",
+"transition_info",
+"transitions_frame",
+"elem_bout_matrix",
+"unlist_list",
+"unlist_vector"
+),
+envir = environment()
+)
+registerDoParallel(mycluster)
+clusterEvalQ(mycluster, {
+library(tidyverse)
+library(tidyfast)
+library(tidytext)
+})
+# calculate probabilities through bootstraps
+ran_sums <-
+parLapply(X = 1:1000, cl = mycluster, function(y) {
+# randomise elements within contexts
+ran_element_bout <- context_element_bout
+ran_element_bout <-
+lapply(ran_element_bout, function(k) {
+sample(unlist(ran_element_bout,
+recursive = FALSE,
+use.names = FALSE),
+size = length(k))
+})
+# count occurrences of transitions in these data
+ran.sum <- transition_info(
+antecedent = antecedent,
+consequent = consequent,
+elem.bout = ran_element_bout,
+it = 1,
+measure = c("sum"),
+ran.method = 'random'
+)
+# turn NA into 0
+ran.sum <-
+ifelse(is.na(ran.sum), 0, ran.sum)
+return(ran.sum)
+})
+stopCluster(mycluster)
+# bind permutations together
+ran_sums <- ran_sums %>%
+bind_cols() %>%
+suppressMessages()
+# calculate pvalues etc
+significance.table <- context_transitions %>%
+select(-prob.antecedent, -prob.consequent, -joint.prob) %>%
+mutate(
+boot_expected = rowMeans(ran_sums, na.rm = T),
+boot_pvalue = rowMeans(ran_sums >= context_transitions$observed.sum, na.rm = T),
+#boot_prob.increase = observed.sum / rowMeans(ran_sums, na.rm = T),
+context = names(probs_by_context)[x]
+)
+return(significance.table)
+})
+# assign names
+names(reliability_1) <- probs_by_context
+# save only those bigrams with significance below x and more than y occurrences
+reliability_1_significant <- lapply(reliability_1, function(x) {
+x %>%
+filter(boot_pvalue <= 0.05 &
+observed.sum >= 3)
+}) %>% bind_rows %>%
+data.frame %>%
+select(-conditional.prob,
+-count.antecedent,
+-count.consequent)
+kable(
+reliability_1_significant,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Bigrams that occur above expected probability within their context"
+)%>%
+kable_styling(font_size = 9)
+# Chunk 14: reliability_2
+# this takes forever, so parallelise randomisation
+n_cores <- detectCores() - 1
+reliability_2 <- lapply(1:length(probs_by_context), function(x) {
+# extract data
+context_transitions <- probs_by_context[[x]]$transitions
+context_single_elements <- probs_by_context[[x]]$single_elements
+context_additional_info <- probs_by_context[[x]]$additional_info
+context_element_bout <- probs_by_context[[x]]$element_bout_context
+antecedent <- context_transitions$antecedent
+consequent <- context_transitions$consequent
+# create cluster for parallelization
+mycluster <- makeCluster(n_cores, type = "PSOCK")
+# export the relevant information to each core
+clusterExport(
+cl = mycluster,
+c(
+"context_transitions",
+"context_single_elements",
+"context_additional_info",
+"context_element_bout",
+"antecedent",
+"consequent",
+"x",
+"element_bout",
+"transition_info",
+"transitions_frame",
+"elem_bout_matrix",
+"unlist_list",
+"unlist_vector"
+),
+envir = environment()
+)
+registerDoParallel(mycluster)
+clusterEvalQ(mycluster, {
+library(tidyverse)
+library(tidyfast)
+library(tidytext)
+})
+# calculate probabilities through bootstraps
+ran_sums <- parLapply(X = 1:1000,
+cl = mycluster,
+function(y) {
+ran_element_bout <- element_bout
+ran_element_bout <-
+lapply(ran_element_bout, function(k) {
+sample(unlist(ran_element_bout, use.names = FALSE), size = length(k))
+})
+ran_element_bout <-
+ran_element_bout[sample(seq_along(ran_element_bout),
+size = length(context_element_bout))]
+ran.sum <- transition_info(
+antecedent = antecedent,
+consequent = consequent,
+elem.bout = ran_element_bout,
+it = 1,
+measure = c("sum"),
+ran.method = 'random'
+)
+ran.sum <-
+ifelse(is.na(ran.sum), 0, ran.sum)
+return(ran.sum)
+})
+stopCluster(mycluster)
+ran_sums <- ran_sums %>%
+bind_cols() %>%
+suppressMessages()
+significance.table <- context_transitions %>%
+select(-prob.antecedent,-prob.consequent,-joint.prob) %>%
+mutate(
+boot_expected = rowMeans(ran_sums, na.rm = T),
+boot_pvalue = rowMeans(ran_sums >= context_transitions$observed.sum, na.rm = T),
+#boot_prob.increase = observed.sum / rowMeans(ran_sums, na.rm = T),
+context = names(probs_by_context)[x]
+)
+return(significance.table)
+})
+names(reliability_2) <- probs_by_context
+reliability_2_significant <- lapply(reliability_2, function(x) {
+x %>%
+filter(boot_pvalue <= 0.05 &
+observed.sum >= 3)
+}) %>% bind_rows %>%
+data.frame %>%
+select(-conditional.prob,
+-count.antecedent,
+-count.consequent)
+kable(
+reliability_2_significant,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Bigrams that occur above expected probability across contexts"
+)%>%
+kable_styling(font_size = 9)
+# Chunk 15: reliability_3
+reliability_3 <- lapply(1:length(probs_by_context), function(x) {
+# extract data
+context_transitions <- probs_by_context[[x]]$transitions
+context_single_elements <- probs_by_context[[x]]$single_elements
+context_additional_info <- probs_by_context[[x]]$additional_info
+context_element_bout <- probs_by_context[[x]]$element_bout_context
+antecedent <- context_transitions$antecedent
+consequent <- context_transitions$consequent
+# create cluster for parallelization
+mycluster <- makeCluster(n_cores, type = "PSOCK")
+# export the relevant information to each core
+clusterExport(
+cl = mycluster,
+c(
+"context_transitions",
+"context_single_elements",
+"context_additional_info",
+"context_element_bout",
+"antecedent",
+"consequent",
+"x",
+"element_bout",
+"transition_info",
+"transitions_frame",
+"elem_bout_matrix",
+"unlist_list",
+"unlist_vector"
+),
+envir = environment()
+)
+registerDoParallel(mycluster)
+clusterEvalQ(mycluster, {
+library(tidyverse)
+library(tidyfast)
+library(tidytext)
+})
+# calculate probabilities through bootstraps
+ran_sums <- parLapply(X = 1:1000,
+cl = mycluster,
+function(y) {
+ran_element_bout <- element_bout
+ran_element_bout <-
+ran_element_bout[sample(
+seq_along(ran_element_bout),
+replace = TRUE,
+size = length(context_element_bout)
+)]
+ran.sum <- transition_info(
+antecedent = antecedent,
+consequent = consequent,
+elem.bout = ran_element_bout,
+it = 1,
+measure = c("sum"),
+ran.method = 'random'
+)
+ran.sum <-
+ifelse(is.na(ran.sum), 0, ran.sum)
+return(ran.sum)
+})
+stopCluster(mycluster)
+ran_sums <- ran_sums %>%
+bind_cols() %>%
+suppressMessages()
+significance.table <- context_transitions %>%
+select(-prob.antecedent,-prob.consequent,-joint.prob) %>%
+mutate(
+boot_expected = rowMeans(ran_sums, na.rm = T),
+boot_pvalue = rowMeans(ran_sums >= context_transitions$observed.sum, na.rm = T),
+#boot_prob.increase = observed.sum / rowMeans(ran_sums, na.rm = T),
+context = names(probs_by_context)[x]
+)
+return(significance.table)
+})
+names(reliability_3) <- probs_by_context
+reliability_3_significant <- lapply(reliability_3, function(x) {
+x %>%
+filter(boot_pvalue < 0.05 &
+observed.sum > 3)
+}) %>% bind_rows %>%
+data.frame %>%
+select(-conditional.prob,
+-count.antecedent,
+-count.consequent)
+kable(
+reliability_3_significant,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Bigrams that occur more in the context than expected across contexts"
+)%>%
+kable_styling(font_size = 9)
+# Chunk 16: reliability_combine
+reliability_significant <- bind_rows(reliability_1_significant,
+reliability_2_significant,
+reliability_3_significant) %>%
+group_by(antecedent,
+consequent,
+context) %>%
+summarise(count = n()) %>%
+ungroup() %>%
+filter(count == 3) %>%
+data.frame() %>%
+select(context, antecedent, consequent) %>%
+arrange(context)
+kable(
+reliability_significant,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Bigrams that occur reliably and non-randomly in a context"
+)%>%
+kable_styling(font_size = 9)
+# Chunk 17: conditionality
+commutativity <- lapply(1:length(probs_by_context), function(x) {
+# extract data
+context_transitions <- probs_by_context[[x]]$transitions
+context_single_elements <- probs_by_context[[x]]$single_elements
+context_additional_info <- probs_by_context[[x]]$additional_info
+context_element_bout <- probs_by_context[[x]]$element_bout_context
+# use conditionality() function
+significance.table <-
+conditionality(elem.bout = context_element_bout,
+it = 1,
+cores = 10,
+trials = 1000,
+cutoff = 0,
+ran.method = 'random') %>%
+mutate(context = names(probs_by_context)[x])
+return(significance.table)
+})
+names(commutativity) <- probs_by_context
+commutativity_significant <- lapply(commutativity, function(x) {
+x %>%
+filter(p.recip <= 0.05 &
+joint.sum >= 3)
+}) %>%
+bind_rows %>%
+data.frame
+commutativity_significant$antecedent <- ifelse(commutativity_significant$conditional.AtoB >= commutativity_significant$conditional.BtoA, commutativity_significant$elementA, commutativity_significant$elementB)
+commutativity_significant$consequent <- ifelse(commutativity_significant$conditional.BtoA >= commutativity_significant$conditional.AtoB, commutativity_significant$elementA, commutativity_significant$elementB)
+commutativity_significant <- commutativity_significant %>%
+select(context, antecedent, consequent) %>%
+arrange(context)
+kable(
+commutativity_significant,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Bigrams that show significant difference in direction of usage"
+)%>%
+kable_styling(font_size = 9)
+# Chunk 18: compositionality
+compositionality <- lapply(1:length(probs_by_context), function(x) {
+significance.table <-
+sequence_context_comparison(
+elem.bout = element_bout,
+compare_column = additional_info$Goals,
+test.condition = names(probs_by_context)[x],
+null.condition = NULL,
+threshold = 0,
+trials = 1000)
+return(significance.table)
+})
+compositionality_significant <- lapply(compositionality, function(x) {
+x %>%
+filter(antecedent_pvalue <= 0.05 &
+consequent_pvalue <= 0.05 &
+test.count >= 3)
+}) %>%
+bind_rows %>%
+data.frame %>%
+select(context, antecedent, consequent) %>%
+arrange(context)
+kable(
+compositionality_significant,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Bigrams that show higher specificity of context than either single element"
+)%>%
+kable_styling(font_size = 9)
+all_req <- bind_rows(reliability_significant,
+commutativity_significant,
+compositionality_significant) %>%
+group_by(antecedent,
+consequent,
+context) %>%
+summarise(count = n()) %>%
+ungroup() %>%
+filter(count >= 3) %>%
+data.frame() %>%
+select(-count) %>%
+select(context, antecedent, consequent)
+kable(
+all_req,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Transitions and contexts that fulfill all three requirements and occur at least 3 times"
+)%>%
+kable_styling(font_size = 9)
+two_req <- bind_rows(reliability_significant,
+compositionality_significant) %>%
+group_by(antecedent,
+consequent,
+context) %>%
+summarise(count = n()) %>%
+ungroup() %>%
+filter(count >= 2) %>%
+data.frame() %>%
+select(-count) %>%
+select(context, antecedent, consequent)
+kable(
+all_req,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Transitions and contexts that fulfill all three requirements and occur at least 3 times"
+)%>%
+kable_styling(font_size = 9)
+two_req <- bind_rows(reliability_significant,
+compositionality_significant) %>%
+group_by(antecedent,
+consequent,
+context) %>%
+summarise(count = n()) %>%
+ungroup() %>%
+filter(count >= 2) %>%
+data.frame() %>%
+select(-count) %>%
+select(context, antecedent, consequent)
+kable(
+two_req,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Transitions and contexts that fulfill two requirements and occur at least 3 times"
+)%>%
+kable_styling(font_size = 9)
+two_req <- bind_rows(reliability_significant,
+compositionality_significant) %>%
+group_by(antecedent,
+consequent,
+context) %>%
+summarise(count = n()) %>%
+ungroup() %>%
+filter(count >= 2) %>%
+data.frame() %>%
+select(-count) %>%
+select(context, antecedent, consequent) %>%
+arrange(context)
+kable(
+two_req,
+row.names = F,
+format = 'html',
+align = "c",
+booktabs = T,
+caption = "Transitions and contexts that fulfill two requirements and occur at least 3 times"
+)%>%
+kable_styling(font_size = 9)
+devtools::document
+devtools::document()
+devtools::check()
+styler:::style_selection()
+devtools::document()
+devtools::install()
+1
+install.packages(c("ape", "brew", "cli", "colorspace", "conquer", "datawizard", "doParallel", "dplyr", "flextable", "gdtools", "geojsonsf", "glue", "gmp", "gower", "insight", "iterators", "jsonlite", "keras", "leaflet", "lme4", "MuMIn", "NetFACS", "openssl", "quanteda", "randomForest", "recipes", "Rfast", "rlang", "rmarkdown", "see", "seriation", "sf", "svglite", "systemfonts", "tensorflow", "terra", "tinytex", "tmap", "TSP", "units", "V8", "xfun", "XML", "yaml"))
+devtools::install()
+devtools::document()
+devtools::check()
+roxygen2::roxygenise()
+devtools::check()
+devtools::install_github('https://github.com/AlexMielke1988/Gestures/tree/main/R%20package/wildminds')
+devtools::install_github('https://github.com/AlexMielke1988/Gestures/R package/wildminds/')

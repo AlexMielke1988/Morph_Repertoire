@@ -1,0 +1,244 @@
+#' Test bidirectional conditionality: which element dyads are commutative (order doesn't matter), which are non-commutative (order matters)
+#'
+#' @param elem.bout list of vectors of elements. Co-occurring elements are marked by the '%' symbol (e.g., mount%slap).
+#' @param it how many iterations of the random splitting of co-occurring elements should be used? If elements never co-occur, this can be set to 1. If there are many co-occurrences, this number should be high, but this will make things slower
+#' @param cores number of cores for parallelized randomizations
+#' @param trials number of random assignments for randomizations
+#' @param cutoff number of times the combination should at least have been observed to be included
+#' @param ran.method for co-occurring elements, how should they be split? Can be 'random' (order is randomised), or 'sample' (randomly choose any)
+#'
+#' @return Function returns a frame with the
+#'
+#' @importFrom dplyr mutate arrange desc as_tibble select all_of na_if inner_join left_join bind_rows bind_cols rename mutate_all distinct row_number summarize tibble filter count distinct
+#' @importFrom stringr str_detect str_split str_replace_all str_to_title str_to_lower
+#' @importFrom magrittr %>%
+#' @importFrom tidyr replace_na gather separate unite
+#' @importFrom tidytext unnest_tokens
+#' @importFrom tidyfast dt_separate
+#' @importFrom purrr map
+
+#'
+#' @author Alex Mielke
+#' @export
+#'
+#' @examples
+#' ###
+conditionality <- function(elem.bout,
+                           it = 1,
+                           cores = 10,
+                           trials = 1000,
+                           cutoff = 5,
+                           ran.method = "random") {
+
+  # calculate transitions
+  transitions <- transitions_frame(
+    elem.bout = elem.bout,
+    elements = NULL,
+    all.possible = TRUE
+  )
+
+  antecedent <- transitions$antecedent
+  consequent <- transitions$consequent
+
+  # probability of A leading to B
+  transitions$observed.probs <- transition_info(
+    antecedent = antecedent,
+    consequent = consequent,
+    elem.bout = elem.bout,
+    it = it,
+    measure = c("conditional"),
+    ran.method = ran.method
+  )
+
+  # sum of A to B
+  transitions$observed.sum <- transition_info(
+    antecedent = antecedent,
+    consequent = consequent,
+    elem.bout = elem.bout,
+    it = it,
+    measure = c("sum"),
+    ran.method = ran.method
+  )
+
+
+  # create dyads from transitions frame
+  dyads <- sapply(seq_along(antecedent), function(x) {
+    paste(sort(c(
+      antecedent[x], consequent[x]
+    )), collapse = "%")
+  })
+
+  # combine the two lines for each combination into one
+  trans.dyads <- do.call(rbind, lapply(unique(dyads), function(x) {
+    set.data <- transitions[dyads == x, ]
+    if (nrow(set.data) == 2) {
+      x.data <- data.frame(
+        dyad = x,
+        elementA = set.data$antecedent[1],
+        elementB = set.data$antecedent[2],
+        joint.sum = (sum(set.data$observed.sum)),
+        joint.probability = (
+          sum(set.data$observed.sum) / sum(transitions$observed.sum)
+        ),
+        conditional.AtoB = set.data$observed.probs[1],
+        conditional.BtoA = set.data$observed.probs[2]
+      )
+    }
+    if (nrow(set.data) == 1) {
+      x.data <- data.frame(
+        dyad = x,
+        elementA = set.data$antecedent[1],
+        elementB = set.data$consequent[1],
+        joint.sum = (sum(set.data$observed.sum)),
+        joint.probability = (
+          sum(set.data$observed.sum) / sum(transitions$observed.sum)
+        ),
+        conditional.AtoB = set.data$observed.probs[1],
+        conditional.BtoA = 0
+      )
+    }
+
+    return(x.data)
+  }))
+
+  # calculate reciprocity
+  trans.dyads$reciprocity <- apply(cbind(
+    trans.dyads$conditional.AtoB / (
+      trans.dyads$conditional.AtoB + trans.dyads$conditional.BtoA
+    ),
+    (
+      trans.dyads$conditional.BtoA / (
+        trans.dyads$conditional.AtoB + trans.dyads$conditional.BtoA
+      )
+    )
+  ), 1, max)
+  trans.dyads$reciprocity <- round(trans.dyads$reciprocity, 2)
+
+  # randomize data within grooming bouts, so that the elements in each bout stay the same, but the position of each element differs
+  randomizations <- randomized_transition_info(
+    elem.bout = elem.bout,
+    antecedent = antecedent,
+    consequent = consequent,
+    observed = transitions$observed.probs,
+    it = trials,
+    cores = cores,
+    trials = trials,
+    output = "raw",
+    type = "within"
+  )
+
+
+  ran.dyads <- lapply(unique(dyads), function(x) {
+    ran.probs <- randomizations$prob[dyads == x, ]
+    values <- trans.dyads[trans.dyads$dyad == x, ]
+    if (is.null(nrow(ran.probs))) {
+      x.data <- data.frame(
+        dyad = x,
+        elementA = values$elementA[1],
+        elementB = values$elementB[1],
+        conditional.AtoB = mean(ran.probs, na.rm = T),
+        conditional.BtoA = mean(ran.probs, na.rm = T)
+      )
+      p.AtoB <-
+        mean(values$conditional.AtoB <= ran.probs, na.rm = T)
+      p.BtoA <-
+        mean(values$conditional.BtoA <= ran.probs, na.rm = T)
+
+      z.AtoB <-
+        (values$conditional.AtoB - mean(ran.probs, na.rm = T)) / sd(ran.probs, na.rm = T)
+      z.BtoA <-
+        (values$conditional.BtoA - mean(ran.probs, na.rm = T)) / sd(ran.probs, na.rm = T)
+
+      p.recip <- 1
+      z.recip <- 0
+
+      x.data$reciprocity <-
+        suppressWarnings(max(
+          x.data$conditional.AtoB / (x.data$conditional.AtoB + x.data$conditional.BtoA),
+          (
+            x.data$conditional.BtoA / (x.data$conditional.AtoB + x.data$conditional.BtoA)
+          ),
+          na.rm = T
+        ))
+
+      return(
+        c(
+          expected.AtoB = round(x.data$conditional.AtoB, 3),
+          p.AtoB = round(p.AtoB, 3),
+          z.AtoB = round(z.AtoB, 3),
+          expected.BtoA = round(x.data$conditional.BtoA, 3),
+          p.BtoA = round(p.BtoA, 3),
+          z.BtoA = round(z.BtoA, 3),
+          expected.reciprocity = round(x.data$reciprocity, 3),
+          p.recip = round(p.recip, 3),
+          z.recip = round(z.recip, 3)
+        )
+      )
+    }
+
+    if (nrow(ran.probs) == 2) {
+      x.data <- data.frame(
+        dyad = x,
+        elementA = values$elementA[1],
+        elementB = values$elementB[1],
+        conditional.AtoB = rowMeans(ran.probs, na.rm = T)[1],
+        conditional.BtoA = rowMeans(ran.probs, na.rm = T)[2]
+      )
+      p.AtoB <-
+        mean(values$conditional.AtoB <= ran.probs[1, ], na.rm = T)
+      p.BtoA <-
+        mean(values$conditional.BtoA <= ran.probs[2, ], na.rm = T)
+
+      z.AtoB <-
+        (values$conditional.AtoB - mean(ran.probs[1, ], na.rm = T)) / sd(ran.probs[1, ], na.rm = T)
+      z.BtoA <-
+        (values$conditional.BtoA - mean(ran.probs[2, ], na.rm = T)) / sd(ran.probs[2, ], na.rm = T)
+
+      recip <-
+        suppressWarnings(sapply(1:ncol(ran.probs), function(y) {
+          max(
+            ran.probs[1, y] / sum(ran.probs[, y], na.rm = T),
+            ran.probs[2, y] / sum(ran.probs[, y], na.rm = T),
+            na.rm = T
+          )
+        }))
+      recip <- ifelse(is.infinite(recip), 0.5, recip)
+
+      p.recip <- mean(values$reciprocity <= recip, na.rm = T)
+      z.recip <-
+        (values$reciprocity - mean(recip, na.rm = T)) / sd(recip, na.rm = T)
+
+      x.data$reciprocity <-
+        suppressWarnings(max(
+          x.data$conditional.AtoB / (x.data$conditional.AtoB + x.data$conditional.BtoA),
+          (
+            x.data$conditional.BtoA / (x.data$conditional.AtoB + x.data$conditional.BtoA)
+          ),
+          na.rm = T
+        ))
+
+      return(
+        c(
+          expected.AtoB = round(x.data$conditional.AtoB, 3),
+          p.AtoB = round(p.AtoB, 3),
+          z.AtoB = round(z.AtoB, 3),
+          expected.BtoA = round(x.data$conditional.BtoA, 3),
+          p.BtoA = round(p.BtoA, 3),
+          z.BtoA = round(z.BtoA, 3),
+          expected.reciprocity = round(x.data$reciprocity, 3),
+          p.recip = round(p.recip, 3),
+          z.recip = round(z.recip, 3)
+        )
+      )
+    }
+  })
+
+  ran.dyads <- ran.dyads %>% bind_rows %>% data.frame
+  trans.dyads <-
+    cbind(trans.dyads, ran.dyads) %>%
+    data.frame() %>%
+    arrange(.data$elementA, .data$elementB) %>%
+    filter(.data$joint.sum > cutoff)
+
+  return(trans.dyads)
+}

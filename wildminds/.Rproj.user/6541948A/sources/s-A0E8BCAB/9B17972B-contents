@@ -1,0 +1,580 @@
+#' Extract datasets directly from ELAN files and format them for input into FileMaker or direct analysis
+#'
+#' In ELAN, the only steps to follow are the following:
+#' Click 'File/Export Multiple Files as/Tab-delimited Text
+#' Create a New Domain (or use your existing one)
+#' Select all your coded .eaf files and click them over to the right. Then click 'OK'. Select any Domain name
+#' Click 'Select All' below the Tier names
+#' Unclick everything except: 'Include file name column' , 'Begin Time', 'End Time', 'Duration', 'Msec'
+#' Click 'OK' and save the file in any path as a .csv file
+#' For this function to work, you just have to add the path to the function call. The function will extract all the other information
+#'
+#' @param path path and file name where your ELAN data are saved as a .csv
+#'
+#' @return Function returns a dataframe that should be structured correctly for import in Filemaker
+#'
+#' @importFrom dplyr mutate filter arrange desc as_tibble select bind_rows bind_cols rename
+#' @importFrom readr read_csv
+#' @importFrom magrittr %>%
+#' @importFrom stringr str_replace
+#' @importFrom utils tail
+#'
+#' @export
+
+extract_ELAN <- function(path) {
+  # Read in File ------------------------------------------------------------
+  xdata <- read_csv(
+    file = path,
+    col_names = FALSE,
+    show_col_types = FALSE
+  )
+
+  # Set Column Names --------------------------------------------------------
+
+  colnames(xdata) <- c(
+    "Column_name",
+    "Tier",
+    "Start_time",
+    "End_time",
+    "Duration",
+    "Parameter",
+    "File_name"
+  )
+
+  # Change times to seconds -------------------------------------------------
+  xdata <- xdata %>%
+    mutate(
+      Start_time = .data$Start_time / 1000,
+      End_time = .data$End_time / 1000,
+      Duration = .data$Duration / 1000
+    ) %>%
+    # Need akward work-around for the file name because there sometimes are the same Com name in different videos
+    mutate(File_parameter = str_c(.data$File_name,
+      .data$Parameter,
+      sep = "_"
+    ))
+
+  # Create Identifier for Communications --------------------------------------------
+  Communications <- xdata %>%
+    filter(.data$Column_name == "Com_number")
+
+  x <- which(Communications$Parameter == "280099")
+
+
+  # Go through identifiers and add information ------------------------------
+  Communications_info <-
+    lapply(seq_along(Communications$File_parameter), function(x) {
+      # select only the communication in question
+      Com_info <- Communications %>%
+        filter(.data$File_parameter == Communications$File_parameter[x])
+      # select all data that falls within that communication
+      sub.data <- xdata %>%
+        filter(
+          .data$File_name == Com_info$File_name &
+            .data$Start_time >= Com_info$Start_time &
+            .data$End_time <= Com_info$End_time
+        )
+      # select all recordings for G1 in that time period
+      G1_recordings <- sub.data %>%
+        filter(.data$Column_name == "G1_Rec_number")
+      # select all recordings for G1 in that time period
+      G2_recordings <- sub.data %>%
+        filter(.data$Column_name == "G2_Rec_number")
+
+      # Sometimes, no Record Number was given (strangely) for anything. Have to create a fake G1
+      if (nrow(G1_recordings) == 0) {
+        print(paste(
+          c(
+            Communications$Parameter[x],
+            " in ",
+            Communications$File_name[x],
+            " has no G1_Rec_Number, please fix"
+          ),
+          collapse = ""
+        ))
+        return(NA)
+      }
+
+      G_recordings <- bind_rows(
+        G1_recordings,
+        G2_recordings
+      )
+
+      # Get Info for all G1 recordings in the Communication ---------------------
+      G_events <- lapply(1:nrow(G_recordings), function(y) {
+        rec.data <- sub.data %>%
+          filter(
+            .data$End_time > G_recordings$Start_time[y] &
+              .data$Start_time < G_recordings$End_time[y]
+          )
+
+        rec.data$Column_name <-
+          rec.data$Column_name %>% str_replace_all(pattern = "G1_", replacement = "")
+        rec.data$Column_name <-
+          rec.data$Column_name %>% str_replace_all(pattern = "G2_", replacement = "")
+        rec.data$Column_name <-
+          rec.data$Column_name %>% str_replace_all(pattern = "Gesture_record1", replacement = "Gesture_record")
+        rec.data$Column_name <-
+          rec.data$Column_name %>% str_replace_all(pattern = "Gesture_record2", replacement = "Gesture_record")
+
+        if (G_recordings$Tier[y] == "G1") {
+          rec.data <- rec.data %>%
+            filter(.data$Tier != "G2")
+        }
+        if (G_recordings$Tier[y] == "G2") {
+          rec.data <- rec.data %>%
+            filter(.data$Tier != "G1")
+        }
+
+
+        # Get data for Bout_part: select last BP to start before Gesture Record, assign either BP1 or BP2 variables
+        ## error message
+        if (nrow(sub.data %>%
+          filter(.data$Column_name %in% c("Bout_part1", "Bout_part2"))) == 0) {
+          print(paste(
+            c(
+              Communications$Parameter[x],
+              " in ",
+              Communications$File_name[x],
+              " has no Bout_part associated, please fix"
+            ),
+            collapse = ""
+          ))
+          return(NA)
+        }
+
+
+        bp.select <- sub.data %>%
+          filter(
+            .data$Start_time <= G_recordings$Start_time[y] &
+              .data$Column_name %in% c("Bout_part1", "Bout_part2")
+          ) %>%
+          mutate(time.diff = G_recordings$Start_time[y] - .data$Start_time) %>%
+          filter(.data$time.diff == min(.data$time.diff)) %>%
+          select(.data$Column_name) %>%
+          unlist(use.names = FALSE)
+
+        if (bp.select == "Bout_part1") {
+          bp.data <- sub.data %>%
+            filter(.data$Start_time <= G_recordings$Start_time[y] &
+              (
+                str_detect(.data$Column_name, pattern = "BP1") |
+                  str_detect(.data$Column_name, pattern = "Bout_part1")
+              ))
+          bp.data$Column_name <- bp.data$Column_name %>%
+            str_replace_all(pattern = "BP1_", replacement = "")
+          bp.data$Column_name <- bp.data$Column_name %>%
+            str_replace_all(pattern = "Bout_part1", replacement = "Bout_part")
+        }
+        if (bp.select == "Bout_part2") {
+          bp.data <- sub.data %>%
+            filter(.data$Start_time <= G_recordings$Start_time[y] &
+              (
+                str_detect(.data$Column_name, pattern = "BP2") |
+                  str_detect(.data$Column_name, pattern = "Bout_part2")
+              ))
+          bp.data$Column_name <-
+            bp.data$Column_name %>% str_replace_all(pattern = "BP2_", replacement = "")
+          bp.data$Column_name <-
+            bp.data$Column_name %>% str_replace_all(pattern = "Bout_part2", replacement = "Bout_part")
+        }
+
+        # Latency data: Select first Latency 1, Latency 2, G_rcp, Voc_rcp, and Bhv_Ch of Communication
+        lat.data <-
+          sub.data %>%
+          filter(
+            Tier %in% c("Duration_timing", "Signal_tiers") &
+              str_detect(
+                .data$Column_name,
+                pattern = "MAU",
+                negate = TRUE
+              )
+          ) %>%
+          arrange(.data$Start_time) %>%
+          distinct(.data$Column_name,
+            .keep_all = T,
+          )
+
+        # MAU data: select MAU information that starts at the same time as Gesture Record
+        mau.data <- sub.data %>%
+          filter(
+            .data$Tier %in% c("Duration_timing") &
+              str_detect(
+                .data$Column_name,
+                pattern = "MAU",
+                negate = FALSE
+              )
+          ) %>%
+          filter(.data$Start_time == G_recordings$Start_time[y]) %>%
+          filter(str_detect(.data$Column_name, pattern = G_recordings$Tier[y]))
+
+        ### if no MAU is defined that starts at same time as Gesture Action, use first one that starts after
+
+        if (nrow(mau.data) == 0) {
+          mau.data <- sub.data %>%
+            filter(
+              .data$Tier %in% c("Duration_timing") &
+                str_detect(
+                  .data$Column_name,
+                  pattern = "MAU",
+                  negate = FALSE
+                )
+            ) %>%
+            filter(str_detect(.data$Column_name, pattern = G_recordings$Tier[y])) %>%
+            filter(.data$Start_time > G_recordings$Start_time[y]) %>%
+            filter(.data$Start_time <= G_recordings$End_time[y])
+
+          if (nrow(mau.data) > 1) {
+            mau.data <- mau.data %>%
+              filter(.data$Start_time == min(.data$Start_time))
+          }
+        }
+
+        GA_end_data <- sub.data %>%
+          filter(
+            .data$Tier %in% c("Duration_timing") &
+              str_detect(
+                .data$Column_name,
+                pattern = "MAU",
+                negate = FALSE
+              ) &
+              str_detect(Parameter,
+                pattern = "GA",
+                negate = FALSE
+              )
+          ) %>%
+          filter(
+            .data$Start_time >= G_recordings$Start_time[y] &
+              .data$End_time <= G_recordings$End_time[y]
+          ) %>%
+          filter(str_detect(.data$Column_name, pattern = G_recordings$Tier[y]))
+
+        if (nrow(GA_end_data) == 0) {
+          GA_end_data <- sub.data %>%
+            filter(
+              .data$Tier %in% c("Duration_timing") &
+                str_detect(
+                  .data$Column_name,
+                  pattern = "MAU",
+                  negate = FALSE
+                ) &
+                str_detect(Parameter,
+                  pattern = "GA",
+                  negate = FALSE
+                )
+            ) %>%
+            filter(str_detect(.data$Column_name, pattern = G_recordings$Tier[y])) %>%
+            filter(.data$Start_time > G_recordings$Start_time[y]) %>%
+            filter(.data$Start_time <= G_recordings$End_time[y])
+
+          if (nrow(GA_end_data) > 1) {
+            GA_end_data <- GA_end_data %>%
+              filter(.data$Start_time == min(.data$Start_time))
+          }
+        }
+
+
+        # all columns will be created in the Event_data list
+        Event_data <- list(
+          ### Variables from G1 Tier and Com Tier
+          # Record Number
+          Rec_number = G_recordings$Parameter[y] %>% str_replace("[[A-Za-z,]]", ""),
+          # Communication Number
+          Com_number = Communications$Parameter[x],
+          # Sequence Part
+          Sequence_part = rec.data$Parameter[rec.data$Column_name == "Sequence_part"],
+          # Clip Name
+          Clip_name = sub.data$Parameter[sub.data$Column_name == "C_Clip_name"],
+          # Audible?
+          Audible = rec.data$Parameter[rec.data$Column_name == "Audible"],
+          # Body Part Contact
+          Body_con = rec.data$Parameter[rec.data$Column_name == "Body_con"],
+          # Body Part Signaller
+          Body_sgn = rec.data$Parameter[rec.data$Column_name == "Body_sgn"],
+          # Coding Status
+          Cod_status = rec.data$Parameter[rec.data$Column_name == "Cod_status"],
+          # Comments Communication
+          Comment_com = sub.data$Parameter[sub.data$Column_name == "C_Comment"],
+          # Comments Record
+          Comment_rec = rec.data$Parameter[rec.data$Column_name == "Comment_rec"],
+          # Contact Laterality
+          Con_lat = rec.data$Parameter[rec.data$Column_name == "Con_lat"],
+          # Directionality Gesture
+          Direct_G = rec.data$Parameter[rec.data$Column_name == "Direct_G"],
+          # Directed To
+          Directed_to = sub.data$Parameter[sub.data$Column_name == "C_Directed_to"],
+          # Distance Recipient
+          Distance_rcp = rec.data$Parameter[rec.data$Column_name == "Distance_rcp"],
+          # Duration ana
+          Dur_ana = rec.data$Parameter[rec.data$Column_name == "Dur_ana"],
+          # Effectiveness
+          Effectiveness = rec.data$Parameter[rec.data$Column_name == "Effectiveness"],
+          # Emphasis
+          Emphasis = rec.data$Parameter[rec.data$Column_name == "Emphasis"],
+          # Exchange Part
+          Exchange_part = rec.data$Parameter[rec.data$Column_name == "Exchange_part"],
+          # Flexion
+          Flexion = rec.data$Parameter[rec.data$Column_name == "Flexion"],
+          # Gesture duration
+          G_duration = G_recordings$Duration[y],
+          # Gesture End Time
+          G_end_T = G_recordings$End_time[y],
+          # Gesture Start Time
+          G_start_T = G_recordings$Start_time[y],
+          # Gesture Record
+          Gesture_record = rec.data$Parameter[rec.data$Column_name == "Gesture_record"],
+          # Goal
+          Goal = sub.data$Parameter[sub.data$Column_name == "C_Goal"],
+          # Laterality Bimodal
+          Lat_bim = rec.data$Parameter[rec.data$Column_name == "Lat_bim"],
+          # Object Contacted
+          Object_contacted = rec.data$Parameter[rec.data$Column_name == "Object_contacted"],
+          # Orientation
+          Orientation = rec.data$Parameter[rec.data$Column_name == "Orientation"],
+          # Recipient Post Context
+          Rcp_post_context = sub.data$Parameter[sub.data$Column_name == "C_Rcp_post_context"],
+          # Recipient Prior Context
+          Rcp_prior_context = sub.data$Parameter[sub.data$Column_name == "C_Rcp_prior_context"],
+          # Recipient VA
+          Rcp_VA = rec.data$Parameter[rec.data$Column_name == "Rcp_VA"],
+          # Recipient
+          Recipient = sub.data$Parameter[sub.data$Column_name == "C_Recipient"],
+          # Repetition Count
+          Rep_count = rec.data$Parameter[rec.data$Column_name == "Rep_count"],
+          # Signaller Facial Expression
+          Sgn_FE = rec.data$Parameter[rec.data$Column_name == "Sgn_FE"],
+          # Signaller Laterality
+          Sgn_lat = rec.data$Parameter[rec.data$Column_name == "Sgn_lat"],
+          # Signaller Post Context
+          Sgn_post_context = sub.data$Parameter[sub.data$Column_name == "C_Sgn_post_context"],
+          # Signaller Prior Context
+          Sgn_prior_context = sub.data$Parameter[sub.data$Column_name == "C_Sgn_prior_context"],
+          # Signaller Vocalisation
+          Sgn_Voc = rec.data$Parameter[rec.data$Column_name == "Sgn_Voc"],
+          # Signaller
+          Signaller = sub.data$Parameter[sub.data$Column_name == "C_Signaller"],
+          # with Object
+          with_Object = rec.data$Parameter[rec.data$Column_name == "with_Object"],
+
+          ### Variables from BP Tier
+
+          # Bout Part
+          Bout_part = bp.data$Parameter[bp.data$Column_name == "Bout_part"],
+          # Gaze Before
+          Gaze_before = bp.data$Parameter[bp.data$Column_name == "Gaze_before"],
+          # Gaze During
+          Gaze_during = bp.data$Parameter[bp.data$Column_name == "Gaze_during"],
+          # Goal Met?
+          Goal_met = bp.data$Parameter[bp.data$Column_name == "Goal_met"],
+          # Persistence
+          Persistence = bp.data$Parameter[bp.data$Column_name == "Persistence"],
+          # Recipient Arousal
+          Rcp_arousal = bp.data$Parameter[bp.data$Column_name == "Rcp_arousal"],
+          # Recipient Facial Expression
+          Rcp_FE = bp.data$Parameter[bp.data$Column_name == "Rcp_FE"],
+          # Recipient Gesture
+          Rcp_G = bp.data$Parameter[bp.data$Column_name == "Rcp_G"],
+          # Recipient Location
+          Rcp_location = bp.data$Parameter[bp.data$Column_name == "Rcp_location"],
+          # Recipient Reaction
+          Rcp_reaction = bp.data$Parameter[bp.data$Column_name == "Rcp_reaction"],
+          # Recipient Vocalisation
+          Rcp_Voc = bp.data$Parameter[bp.data$Column_name == "Rcp_Voc"],
+          # Response Waiting
+          Response_waiting = bp.data$Parameter[bp.data$Column_name == "Response_waiting"],
+          # Signaller Arousal
+          Sgn_arousal = bp.data$Parameter[bp.data$Column_name == "Sgn_arousal"],
+          # Signaller Location
+          Sgn_location = bp.data$Parameter[bp.data$Column_name == "Sgn_location"],
+          # Visibility During
+          Vis_during = bp.data$Parameter[bp.data$Column_name == "Vis_during"],
+
+          ### Latencies
+
+          # Latency 1 Time
+          Latency_1_T = lat.data$Start_time[lat.data$Column_name == "Latency_1"],
+          # Latency 1
+          Latency_1 = lat.data$Parameter[lat.data$Column_name == "Latency_1"],
+          # Latency 2 Time
+          Latency_2_T = lat.data$Start_time[lat.data$Column_name == "Latency_2"],
+          # Latency 2
+          Latency_2 = lat.data$Parameter[lat.data$Column_name == "Latency_2"],
+          # Behaviour Change Start
+          BhvCh_start = lat.data$Parameter[lat.data$Column_name == "BhvCh_start"],
+          # Behaviour Change Start time
+          BhvCh_start_T = lat.data$Start_time[lat.data$Column_name == "BhvCh_start"],
+          # Vocalisation recipient Time
+          Voc_rcp_T = lat.data$Start_time[lat.data$Column_name == "Voc_rcp"],
+          # Vocalisation recipient
+          Voc_rcp = lat.data$Parameter[lat.data$Column_name == "Voc_rcp"],
+          # Gesture recipient Time
+          G_rcp_T = lat.data$Start_time[lat.data$Column_name == "G_rcp"],
+          # Gesture recipient
+          G_rcp = lat.data$Parameter[lat.data$Column_name == "G_rcp"]
+        )
+
+        # Deal with weird columns
+        Event_data <- lapply(Event_data, function(k) {
+          # For columns that have no value, add NA
+          if (length(k) == 0) {
+            return(NA)
+          }
+          # For columns that have one value, use that one
+          if (length(k) == 1) {
+            return(k)
+          }
+          # For columns that have more than one value, use the last one
+          if (length(k) > 1) {
+            return(tail(k, 1))
+          }
+        })
+        # turn Event_data into a dataframe
+        Event_data <- data.frame(Event_data)
+
+
+        # Rarely, some parameters are forgotten. Define them here -----------------
+
+        if (length(rec.data$Parameter[rec.data$Column_name == "Sequence_part"]) == 0) {
+          Event_data$Sequence_part <- "1_1"
+        }
+
+        # Solve specific problems MAU and GA ----------------------------------------------
+        #### MAU times are sometimes difficult to determine, because there are two or no MAU_in
+
+        # If 1 MAU_in or 1 MAU_GA_in, it's easy
+        if (mau.data %>%
+          filter(.data$Parameter == "MAU_GA_in") %>%
+          nrow() == 1) {
+          Event_data$MAU_start_T <- mau.data$Start_time[mau.data$Parameter == "MAU_GA_in"] %>%
+            na.omit() %>%
+            as.vector()
+          Event_data$MAU_end_T <- mau.data$End_time[mau.data$Parameter == "MAU_GA_in"] %>%
+            na.omit() %>%
+            as.vector()
+          Event_data$MAU_duration <- mau.data$Duration[mau.data$Parameter == "MAU_GA_in"] %>%
+            na.omit() %>%
+            as.vector()
+        }
+
+        if (mau.data %>%
+          filter(.data$Parameter == "MAU_GA_in") %>%
+          nrow() == 0 &
+          mau.data %>%
+            filter(.data$Parameter == "MAU_in") %>%
+            nrow() == 1) {
+          Event_data$MAU_start_T <- mau.data$Start_time[mau.data$Parameter == "MAU_in"] %>%
+            na.omit() %>%
+            as.vector()
+          Event_data$MAU_end_T <- mau.data$End_time[mau.data$Parameter == "MAU_in"] %>%
+            na.omit() %>%
+            as.vector()
+          Event_data$MAU_duration <- mau.data$Duration[mau.data$Parameter == "MAU_in"] %>%
+            na.omit() %>%
+            as.vector()
+        }
+
+        # If no MAU_in or if MAU_ex, put NA
+        if (mau.data %>%
+          filter(.data$Parameter %in% c("MAU_GA_in", "MAU_in")) %>%
+          nrow() == 0 |
+          mau.data %>%
+            filter(.data$Parameter %in% c("MAU_ex")) %>%
+            nrow() > 0) {
+          Event_data$MAU_start_T <- NA
+          Event_data$MAU_end_T <- NA
+          Event_data$MAU_duration <- NA
+        }
+
+        # If MAU_GA_in defined but MAU_in or GA_stop_in also exist, tell the user
+        if (mau.data %>%
+          filter(.data$Parameter %in% c("MAU_in", "MAU_GA_in")) %>%
+          nrow() > 1) {
+          print(paste(
+            c(
+              Communications$Parameter[x],
+              " in ",
+              Communications$File_name[x],
+              " has multiple MAU times, please fix"
+            ),
+            collapse = ""
+          ))
+        }
+
+        ### GA_end_T
+        # use MAU_GA_in if exists
+        if (GA_end_data %>%
+          filter(.data$Parameter == "GA_stop_in") %>%
+          nrow() == 1) {
+          Event_data$GA_end_T <- GA_end_data$End_time[GA_end_data$Parameter == "GA_stop_in"] %>%
+            na.omit() %>%
+            as.vector()
+        }
+
+        # use GA_stop_in if MAU_GA_in doesn't exst
+        if (GA_end_data %>%
+          filter(.data$Parameter == "GA_stop_in") %>%
+          nrow() == 0 &
+          GA_end_data %>%
+            filter(.data$Parameter == "MAU_GA_in") %>%
+            nrow() == 1) {
+          Event_data$GA_end_T <- GA_end_data$End_time[GA_end_data$Parameter == "MAU_GA_in"] %>%
+            na.omit() %>%
+            as.vector()
+        }
+
+        # If no GA_stop_in but no GA_stop_ex, use end of gesture record, put NA
+        if (GA_end_data %>%
+          filter(.data$Parameter == "MAU_GA_in") %>%
+          nrow() == 0 &
+          GA_end_data %>%
+            filter(.data$Parameter == "GA_stop_in") %>%
+            nrow() == 0 &
+          GA_end_data %>%
+            filter(.data$Parameter %in% c("GA_stop_ex")) %>%
+            nrow() == 0) {
+          Event_data$GA_end_T <-
+            rec.data$End_time[rec.data$Column_name %in% c("Gesture_record")] %>%
+            na.omit() %>%
+            as.vector()
+        }
+
+        # If no GA_stop_in but no GA_stop_ex, use end of gesture record, put NA
+        if (GA_end_data %>%
+          nrow() == 0 |
+          GA_end_data %>%
+            filter(.data$Parameter %in% c("GA_stop_ex")) %>%
+            nrow() > 0) {
+          Event_data$GA_end_T <- NA
+        }
+
+        return(Event_data)
+      })
+
+      G_events <- G_events[!is.na(G_events)]
+
+      # Add all the rows within a Communication ---------------------------------
+      Gesture_information <-
+        G_events %>%
+        bind_rows()
+
+      return(Gesture_information)
+    })
+
+  # Bind all rows -----------------------------------------------------------
+  Communications_info <-
+    Communications_info[!is.na(Communications_info)]
+  Communications_info <-
+    Communications_info %>%
+    bind_rows()
+
+  # Add 'None' rather than NA for some Columns ------------------------------
+
+
+  Communications_info <- Communications_info %>%
+    replace_na(list(
+      "Voc_rcp" = "None",
+      "G_rcp" = "None"
+    ))
+
+  return(Communications_info)
+}

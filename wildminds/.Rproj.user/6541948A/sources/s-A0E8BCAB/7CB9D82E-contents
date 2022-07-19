@@ -1,0 +1,134 @@
+#' Extract information on Antecedent -> Consequent transitions. Can be quantified in different ways (sum of transitions, conditional probability, joint probability, point-wise mutual information)
+#'
+#' @param antecedent first element in transition
+#' @param consequent second element in transition
+#' @param elem.bout list of vectors of elements. Co-occurring elements are marked by the '%' symbol (e.g., mount%slap).
+#' @param it number of iterations of assignments
+#' @param measure which measure to quantify the antecedent - consequent transition probability: 'sum' gives the number of transitions, 'conditional' gives conditional probability, 'joint.prob' gives joint probability, 'mi' gives point-wise mutual information
+#' @param ran.method for co-occurring elements, how should they be split? Can be 'random' (order is randomised), or 'sample' (randomly choose any)
+#'
+#' @return Returns a dataframe with the antecedents, consequents and the information about the transitions
+#'
+#' @importFrom dplyr mutate arrange desc as_tibble select all_of na_if inner_join left_join bind_rows bind_cols rename mutate_all distinct row_number summarize tibble filter count distinct
+#' @importFrom stringr str_detect str_split str_replace_all str_to_title str_to_lower
+#' @importFrom magrittr %>%
+#' @importFrom tidyr replace_na gather separate unite
+#' @importFrom arrangements combinations
+#'
+#' @author Alex Mielke
+#' @export
+#'
+#' @examples
+#' ###
+transition_info <- function(antecedent,
+                             consequent,
+                             elem.bout,
+                             it = 1,
+                             measure = c("sum",
+                                         "conditional",
+                                         "mi",
+                                         "joint.prob"),
+                             ran.method = 'random') {
+
+  # unlist and clean element bout
+  elem.bout <- elem.bout %>%
+    map(str_replace_all,
+           pattern = "-|/|_",
+           replacement = ""
+    )
+
+  elem.bout.unlisted <-
+    unlist_list(elem.bout,
+                method = ran.method)
+
+  # create data frame that contains all sequences as 'sentences' separated by space
+  elem.df <-
+    data.frame(elem = unlist(
+      map(elem.bout.unlisted, paste, collapse = " "),
+      recursive = F,
+      use.names = F
+    ))
+
+  # use tidytext functions to create bigrams
+  elem.bi <- elem.df %>%
+    unnest_tokens(bigram,
+                  .data$elem,
+                  token = "ngrams",
+                  n = 2,
+                  to_lower = FALSE
+    ) %>%
+    dt_separate(.data$bigram, c("antecedent", "consequent"), sep = " ") %>%
+    group_by(.data$antecedent, .data$consequent) %>%
+    summarize(count = n()) %>%
+    ungroup() %>%
+    drop_na() %>%
+    suppressMessages()
+
+
+  # create antecedent/consequent table
+  ant_cons <- data.frame(antecedent = as.character(antecedent),
+                    consequent = as.character(consequent)) %>%
+    left_join(elem.bi,
+              by = c('antecedent' = 'antecedent',
+                     'consequent' = 'consequent'))
+
+  ant_cons$count <- ifelse(is.na(ant_cons$count), 0, ant_cons$count)
+
+
+  # Calculate common occurrences
+  AandB <- ant_cons$count
+
+  # occurrences of A and B
+  Aall <- ant_cons %>%
+    group_by(.data$antecedent) %>%
+    summarise(value = sum(.data$count)) %>%
+    ungroup()
+
+  Aall <- ant_cons %>%
+    left_join(Aall,
+              by = c('antecedent' = 'antecedent')) %>%
+    select(.data$value) %>%
+    unlist(recursive = FALSE, use.names = FALSE)
+
+  Ball <- ant_cons %>%
+    group_by(.data$consequent) %>%
+    summarise(value = sum(.data$count)) %>%
+    ungroup()
+
+  Ball <- ant_cons %>%
+    left_join(Ball,
+              by = c('consequent' = 'consequent')) %>%
+    select(.data$value) %>%
+    unlist(recursive = FALSE, use.names = FALSE)
+
+  # Occurrences of A but not B
+  AnotB <- Aall - AandB
+  # Occurrences of B but not A
+  BnotA <- Ball - AandB
+  # Occurrences of not A and not B
+  notAnotB <- length(elem.bout.unlisted %>%
+                       unlist(recursive = FALSE, use.names = FALSE)) - Ball - Aall
+
+  # return measures of interest
+  if (measure == "sum") {
+    return(AandB)
+  }
+  if (measure == "joint.prob") {
+    return(AandB / sum(elem.bi$count))
+  }
+  if (measure == "conditional") {
+    return(AandB / Aall)
+  }
+  if (measure == "mi") {
+    return(
+      (log(
+        (AandB / sum(elem.bi$count)) /
+          (Aall / sum(elem.bi$count) *
+             Ball / sum(elem.bi$count))
+      )
+      ) /
+        (-1 * log(AandB / sum(elem.bi$count))
+        )
+    )
+  }
+}

@@ -1,0 +1,235 @@
+#' Go through gesture dataset, detect sequences and give summary data frame
+#'
+#' Sequences are defined as any consecutive gestures where one follows within x seconds after the previous one. Function goes through dataset, detects gestures that occur in the same recording, and finds those that happen within x seconds of each other, gives the sequence an identifier, and pops out both the dataset and a summary frame
+#' Note: this function only finds sequences that occur within the same Com_number
+#' Note: this function also defines sequences only if the Signaller and the Recipient are the same throughout the sequence. If you disagree with that, let me know and I include an option to make this optional
+#'
+#' @param data data frame as extracted from Filemaker
+#' @param steps number of seconds between the end of one gesture; i.e., '1' (the default) means that it's the same sequence if B happens within 1sec of A
+#' @param col_names defines whether the 'original' names were used (i.e., as the come out of Filemaker) or it was 'renamed' using other functions I wrote
+#' @param duration_type defines whether you want gesture duration be defined only by the MAU or the full gesture
+#'
+#' @return Function returns data frame with summary information on all sequences. Also returns the original data frame with new sequence numbers attached. Further returns the sequences as a list of vectors (for further sequence analysis) and as a co-occurrence matrix (for association rule and collocation analysis)
+#' @return for the summaries, the columns 'Exclude_any' and 'Mau_null' should be 0, otherwise the durations have been judged as unclear by coders
+#'
+#' @importFrom dplyr mutate arrange desc as_tibble select all_of na_if left_join bind_rows bind_cols rename mutate_all distinct row_number
+#' @importFrom stringr str_detect str_split str_replace_all str_to_title str_to_lower
+#' @importFrom magrittr %>%
+#' @importFrom tidyr replace_na gather separate unite
+#'
+#' @export
+
+detect_sequences <- function(data,
+                             steps = 1,
+                             col_names = c("renamed", "original"),
+                             duration_type = c("mau", "full")) {
+  # if col_names is set to 'original', additional columns need to be added that represent the renamed columns I tend to use
+  if (col_names == "original") {
+    data <- data %>%
+      mutate(
+        Communication_number = .data$Com_number,
+        Gesture_start_time = .data$G_start_T,
+        Recording_number = .data$Rec_number,
+        Mau_end_time = .data$MAU_end_T,
+        Gesture_end_time = .data$G_end_T,
+        Part_bout = .data$Bout_part,
+        Part_exchange = .data$Exchange_part,
+        Duration_analysis_include = .data$Dur_ana,
+        Coder = NA,
+        Species = NA
+      )
+  }
+
+  # determine end time based on the 'duration_type' variable
+  ## if it is set to 'mau', then use 'MAU_end_T; if it is set to 'full', use 'G_end_T'
+  if (duration_type == "mau") {
+    data$end_time <- data$Mau_end_time
+    # data$end_time[data$end_time == 0] <- data$Gesture_end_time[data$end_time == 0]
+  }
+  if (duration_type == "full") {
+    data$end_time <- data$Gesture_end_time
+  }
+
+  data <- data %>%
+    ## arrange data by communication number, Gesture start time, and recording number
+    arrange(
+      .data$Communication_number,
+      .data$Gesture_start_time,
+      .data$Recording_number
+    ) %>%
+    ## create extra columns: Sequence_number, Time_delay from last end
+    mutate(
+      Sequence_number = row_number(),
+      Time_delay = 0
+    )
+
+  # go through each Communication_number and identify sequences based on steps
+  sequences_detected <-
+    bind_rows(lapply(unique(data$Communication_number), function(k) {
+      ## select only Communication_number k
+      xx <- data %>%
+        filter(.data$Communication_number == k)
+
+      # return those Communications that only have one Gesture
+      if (nrow(xx) == 1) {
+        return(
+          xx %>%
+            ## give number 1 within the sequence
+            mutate(Sequence_number = 1) %>%
+            ## create 'Sequence_identifier' column that is made up of the communication number and the Sequence_number
+            unite(
+              .data$Sequence_identifier,
+              .data$Communication_number,
+              .data$Sequence_number,
+              sep = "_",
+              remove = FALSE
+            )
+        )
+      }
+
+      # For those Communications with more than one Gesture_record
+      ## Go through every single Gesture_record for this Communication_number and check whether any of the previous cases might be part of the same sequence
+      for (i in 2:nrow(xx)) {
+        ## identify all gestures of the same signaller and recipient that occur before within the same Communication
+        yy <- xx[1:(i - 1), ] %>%
+          filter(.data$Signaller == xx$Signaller[i] &
+            .data$Recipient == xx$Recipient[i])
+
+        # If there are other Gestures of the same individuals previous to this one
+        if (nrow(yy) > 0) {
+          ## assess time difference from last end
+          time_diff <- xx$Gesture_start_time[i] - max(yy$Mau_end_time)
+          ## if time_diff is smaller than the selected steps, give same sequence number as the last case in the subset with the same individuals
+          if (time_diff < steps) {
+            xx$Sequence_number[i] <-
+              yy$Sequence_number[which.max(yy$Mau_end_time)]
+          }
+          # save time delay between end of previous and start of this one
+          xx$Time_delay[i] <- time_diff
+        }
+      }
+      ## make pretty
+      xx <- xx %>%
+        mutate(Sequence_number = as.numeric(as.factor(.data$Sequence_number))) %>%
+        unite(
+          .data$Sequence_identifier,
+          .data$Communication_number,
+          .data$Sequence_number,
+          sep = "_",
+          remove = FALSE
+        )
+      return(xx)
+    }))
+
+  ## add to each event information on which part of the sequence it is
+
+  sequences_detected$Sequence_rank <- 0
+
+  # go through each unique Sequence_identifier and add a 'Sequence_rank' to each Gesture
+  for (i in unique(sequences_detected$Sequence_identifier)) {
+    sequences_detected$Sequence_rank[sequences_detected$Sequence_identifier == i] <-
+      1:sum(sequences_detected$Sequence_identifier == i)
+  }
+
+
+  # make summaries of sequences
+  sequence_summary <-
+    lapply(unique(sequences_detected$Sequence_identifier), function(k) {
+      # select unique Identifier
+
+      ## select only cases that share that identifier
+      xx <- sequences_detected %>%
+        filter(.data$Sequence_identifier == k)
+
+      ## select important information for the identifier
+      yy <- xx %>%
+        distinct(
+          .data$Social_unit,
+          # which group
+          .data$Sequence_identifier,
+          # Identifier number
+          .data$Communication_number,
+          # Communication Number
+          .data$Date,
+          # Date, where possible
+          .data$Clip_name,
+          # Clip Name
+          .data$Coder,
+          .data$Species,
+          .data$Signaller,
+          # Signaller
+          .data$Recipient,
+          # Recipient
+          .keep_all = FALSE # delete other variables
+        )
+      yy$Goals <-
+        paste(unique(xx$Goal), collapse = ", ") # paste all determined Goals
+      yy$Contexts_prior_signaller <-
+        paste(unique(xx$Context_prior_signaller), collapse = ", ") # Paste all Contexts
+      yy$Contexts_prior_recipient <-
+        paste(unique(xx$Context_prior_recipient), collapse = ", ") # Paste all Contexts
+      yy$Contexts_post_signaller <-
+        paste(unique(xx$Context_post_signaller), collapse = ", ") # Paste all Contexts
+      yy$Contexts_post_recipient <-
+        paste(unique(xx$Context_post_recipient), collapse = ", ") # Paste all Contexts
+      yy$Part_bout <-
+        as.numeric(unique(xx$Part_bout) != "1_1") %>% max() # determine whether it was part of a larger bout
+      yy$Part_exchange <-
+        as.numeric(unique(xx$Part_exchange) != "1_1") %>% max() # determine whether it was part of a larger exchange
+      yy$Sequence_length <-
+        nrow(xx) # determine the number of Gestures in the sequence
+      yy$Sequence_start <-
+        min(xx$Gesture_start_time) # determine the start of the Sequence
+      yy$Sequence_end <-
+        max(xx$end_time) # determine the end of the Sequence, based on what was set as 'duration_type'
+      yy$Sequence_duration <-
+        yy$Sequence_end - yy$Sequence_start # determine the start of the Sequence
+      yy$Exclude_any <-
+        as.numeric(unique(xx$Duration_analysis_include) != "Include") %>% max() # checks whether any Durations were excluded in the dataset
+      yy$Mean_duration <-
+        mean(xx$end_time - xx$Gesture_start_time)
+      yy$Median_duration <-
+        median(xx$end_time - xx$Gesture_start_time)
+      yy$Gesture_sequence <-
+        paste(xx$Gesture_record, collapse = ", ")
+      yy$Mau_null <-
+        as.numeric(unique(xx$Mau_end_time) == 0) %>% max() # checks whether any MAU was set as excluded in the data
+
+      return(yy)
+    }) %>%
+    bind_rows() # this binds different list elements together as a data frame
+
+  ### make element view
+
+  element.bout <-
+    lapply(sequence_summary$Gesture_sequence, function(x) {
+      str_split(x, ", ", simplify = F) %>% unlist()
+    })
+  names(element.bout) <- sequence_summary$Sequence_identifier
+
+  ### pop out NetFACS view as well
+  net.xx <- matrix(0,
+    nrow = 1,
+    ncol = length(unique(unlist(
+      data$Gesture_record
+    )))
+  )
+  colnames(net.xx) <- sort(unique(unlist(data$Gesture_record)))
+
+
+  net.view <- lapply(element.bout, function(x) {
+    yy <- net.xx
+    yy[, x] <- 1
+    return(yy)
+  })
+  net.view <- do.call(rbind, net.view)
+
+  return(
+    list(
+      data_frame_sequences = sequences_detected,
+      sequence_summary = sequence_summary,
+      element_bout = element.bout,
+      net_view = net.view
+    )
+  )
+}

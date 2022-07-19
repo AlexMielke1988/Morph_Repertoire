@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<style>body{background-color:white;}</style>
+<script src="lib/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="lib/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="lib/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="lib/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="lib/kePrint-0.0.1/kePrint.js"></script>
+<link href="lib/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+</head>
+<body>
+<table class="table" style="font-size: 9px; margin-left: auto; margin-right: auto;">
+<caption style="font-size: initial !important;">Bigrams that occur above expected probability within their context</caption>
+ <thead>
+  <tr>
+   <th style="text-align:center;"> antecedent </th>
+   <th style="text-align:center;"> consequent </th>
+   <th style="text-align:center;"> observed.sum </th>
+   <th style="text-align:center;"> boot_expected </th>
+   <th style="text-align:center;"> boot_pvalue </th>
+   <th style="text-align:center;"> context </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:center;"> Embrace </td>
+   <td style="text-align:center;"> Bite </td>
+   <td style="text-align:center;"> 7 </td>
+   <td style="text-align:center;"> 0.831 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Affiliation </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Reach </td>
+   <td style="text-align:center;"> Touch </td>
+   <td style="text-align:center;"> 7 </td>
+   <td style="text-align:center;"> 2.473 </td>
+   <td style="text-align:center;"> 0.017 </td>
+   <td style="text-align:center;"> Affiliation </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> BigLoudScratch </td>
+   <td style="text-align:center;"> BigLoudScratch </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1.076 </td>
+   <td style="text-align:center;"> 0.004 </td>
+   <td style="text-align:center;"> ClimbOnMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Pull </td>
+   <td style="text-align:center;"> Pull </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.010 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> ClimbOnMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> PresentDirected </td>
+   <td style="text-align:center;"> BigLoudScratch </td>
+   <td style="text-align:center;"> 21 </td>
+   <td style="text-align:center;"> 8.382 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> DirectAttention </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> Jump </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 0.316 </td>
+   <td style="text-align:center;"> 0.001 </td>
+   <td style="text-align:center;"> FollowMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Jump </td>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.288 </td>
+   <td style="text-align:center;"> 0.002 </td>
+   <td style="text-align:center;"> FollowMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectMoveUnattached </td>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 0.834 </td>
+   <td style="text-align:center;"> 0.003 </td>
+   <td style="text-align:center;"> FollowMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> Jump </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 2.454 </td>
+   <td style="text-align:center;"> 0.038 </td>
+   <td style="text-align:center;"> FollowMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> 11 </td>
+   <td style="text-align:center;"> 4.265 </td>
+   <td style="text-align:center;"> 0.006 </td>
+   <td style="text-align:center;"> FollowMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 0.651 </td>
+   <td style="text-align:center;"> 0.006 </td>
+   <td style="text-align:center;"> FollowMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> BigLoudScratch </td>
+   <td style="text-align:center;"> Reach </td>
+   <td style="text-align:center;"> 10 </td>
+   <td style="text-align:center;"> 4.992 </td>
+   <td style="text-align:center;"> 0.026 </td>
+   <td style="text-align:center;"> GiveMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Stroke </td>
+   <td style="text-align:center;"> Stroke </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.034 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> GiveMe </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Present </td>
+   <td style="text-align:center;"> BigLoudScratch </td>
+   <td style="text-align:center;"> 11 </td>
+   <td style="text-align:center;"> 3.242 </td>
+   <td style="text-align:center;"> 0.001 </td>
+   <td style="text-align:center;"> Groom </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> PresentDirected </td>
+   <td style="text-align:center;"> BigLoudScratch </td>
+   <td style="text-align:center;"> 31 </td>
+   <td style="text-align:center;"> 20.640 </td>
+   <td style="text-align:center;"> 0.016 </td>
+   <td style="text-align:center;"> Groom </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Pull </td>
+   <td style="text-align:center;"> Pull </td>
+   <td style="text-align:center;"> 7 </td>
+   <td style="text-align:center;"> 0.043 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Groom </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> PullDirected </td>
+   <td style="text-align:center;"> PullDirected </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 0.047 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Groom </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> 7 </td>
+   <td style="text-align:center;"> 1.793 </td>
+   <td style="text-align:center;"> 0.001 </td>
+   <td style="text-align:center;"> MoveAway </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 0.914 </td>
+   <td style="text-align:center;"> 0.015 </td>
+   <td style="text-align:center;"> MoveAway </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Dangle </td>
+   <td style="text-align:center;"> StompOther </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.655 </td>
+   <td style="text-align:center;"> 0.035 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Dangle </td>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> 22 </td>
+   <td style="text-align:center;"> 5.032 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> DangleShake </td>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.587 </td>
+   <td style="text-align:center;"> 0.019 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> DangleShake </td>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.747 </td>
+   <td style="text-align:center;"> 0.035 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Grab </td>
+   <td style="text-align:center;"> Bite </td>
+   <td style="text-align:center;"> 16 </td>
+   <td style="text-align:center;"> 1.496 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Grab </td>
+   <td style="text-align:center;"> Grab </td>
+   <td style="text-align:center;"> 10 </td>
+   <td style="text-align:center;"> 3.206 </td>
+   <td style="text-align:center;"> 0.004 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> GrabHold </td>
+   <td style="text-align:center;"> Bite </td>
+   <td style="text-align:center;"> 17 </td>
+   <td style="text-align:center;"> 0.810 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> 27 </td>
+   <td style="text-align:center;"> 6.030 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> ObjectMoveAttached </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 2.239 </td>
+   <td style="text-align:center;"> 0.031 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> 24 </td>
+   <td style="text-align:center;"> 7.046 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitOther </td>
+   <td style="text-align:center;"> Grab </td>
+   <td style="text-align:center;"> 8 </td>
+   <td style="text-align:center;"> 3.643 </td>
+   <td style="text-align:center;"> 0.036 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitOther </td>
+   <td style="text-align:center;"> HitOther </td>
+   <td style="text-align:center;"> 26 </td>
+   <td style="text-align:center;"> 4.462 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitOther </td>
+   <td style="text-align:center;"> StompOther </td>
+   <td style="text-align:center;"> 7 </td>
+   <td style="text-align:center;"> 0.509 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectMoveAttached </td>
+   <td style="text-align:center;"> ObjectMoveAttached </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 0.854 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectMoveAttached </td>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> 11 </td>
+   <td style="text-align:center;"> 2.652 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectMoveUnattached </td>
+   <td style="text-align:center;"> ObjectMoveUnattached </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.085 </td>
+   <td style="text-align:center;"> 0.001 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> 12 </td>
+   <td style="text-align:center;"> 1.918 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> 11 </td>
+   <td style="text-align:center;"> 3.965 </td>
+   <td style="text-align:center;"> 0.004 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> 7 </td>
+   <td style="text-align:center;"> 2.603 </td>
+   <td style="text-align:center;"> 0.015 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Shake </td>
+   <td style="text-align:center;"> Shake </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.416 </td>
+   <td style="text-align:center;"> 0.007 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> HeadStand </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 1.076 </td>
+   <td style="text-align:center;"> 0.008 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> 32 </td>
+   <td style="text-align:center;"> 7.157 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> 38 </td>
+   <td style="text-align:center;"> 7.995 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> StompOther </td>
+   <td style="text-align:center;"> StompOther </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.052 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> DangleShake </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 0.748 </td>
+   <td style="text-align:center;"> 0.004 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> Shake </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 1.208 </td>
+   <td style="text-align:center;"> 0.035 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> Swing </td>
+   <td style="text-align:center;"> 10 </td>
+   <td style="text-align:center;"> 3.717 </td>
+   <td style="text-align:center;"> 0.007 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ThrowThreat </td>
+   <td style="text-align:center;"> ThrowThreat </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 0.048 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Touch </td>
+   <td style="text-align:center;"> Touch </td>
+   <td style="text-align:center;"> 21 </td>
+   <td style="text-align:center;"> 1.799 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> Play </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.613 </td>
+   <td style="text-align:center;"> 0.024 </td>
+   <td style="text-align:center;"> SexualAttention </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> LeafClip </td>
+   <td style="text-align:center;"> LeafClip </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.634 </td>
+   <td style="text-align:center;"> 0.028 </td>
+   <td style="text-align:center;"> SexualAttention </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectMoveAttached </td>
+   <td style="text-align:center;"> HitObject </td>
+   <td style="text-align:center;"> 5 </td>
+   <td style="text-align:center;"> 0.250 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> SexualAttention </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectMoveAttached </td>
+   <td style="text-align:center;"> ObjectMoveAttached </td>
+   <td style="text-align:center;"> 3 </td>
+   <td style="text-align:center;"> 0.454 </td>
+   <td style="text-align:center;"> 0.013 </td>
+   <td style="text-align:center;"> SexualAttention </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> ObjectShake </td>
+   <td style="text-align:center;"> 9 </td>
+   <td style="text-align:center;"> 2.773 </td>
+   <td style="text-align:center;"> 0.004 </td>
+   <td style="text-align:center;"> SexualAttention </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> Fling </td>
+   <td style="text-align:center;"> Fling </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 1.691 </td>
+   <td style="text-align:center;"> 0.011 </td>
+   <td style="text-align:center;"> StopBehaviour </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> HitOther </td>
+   <td style="text-align:center;"> HitOther </td>
+   <td style="text-align:center;"> 6 </td>
+   <td style="text-align:center;"> 0.729 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> StopBehaviour </td>
+  </tr>
+  <tr>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> StompObject </td>
+   <td style="text-align:center;"> 4 </td>
+   <td style="text-align:center;"> 0.170 </td>
+   <td style="text-align:center;"> 0.000 </td>
+   <td style="text-align:center;"> StopBehaviour </td>
+  </tr>
+</tbody>
+</table> <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [["$","$"]]}})</script><script async src="https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
