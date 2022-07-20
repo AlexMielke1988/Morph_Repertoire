@@ -2306,7 +2306,7 @@ We can use the Goals as a way to establish whether the different morphs of the s
 
 The below function establishes the proportion of Goals across all morphs, reduces the dimensions using Latent Class Analysis, and then calculates and plots the Euclidean distance between morphs. There are a couple of different plotting options - we show the network of most similar morphs, where each morph has exactly one most similar morph they are connected with.
 
-```{r sim_morphs, fig.align='center', fig.width=12, fig.height=12, message=F, echo = TRUE, cache = FALSE, fig.cap = "Network plot of connection between morphs based on their similarity."}
+```{r sim_morphs, fig.align='center', fig.width=12, fig.height=12, message=F, echo = TRUE, cache = TRUE, fig.cap = "Network plot of connection between morphs based on their similarity."}
 
 all_data <- cluster_transposed$full.data %>% 
   purrr::map(~ mutate_if(.x, is.factor, as.character)) %>% 

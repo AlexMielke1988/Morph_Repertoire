@@ -267,7 +267,7 @@ morph_detection_bayes <- function(data,
   # fit for all possible cluster solutions
   fits <- lapply(clusters, function(x) {
     fit1 <- blca.em(modifier.matr,
-                    restarts = 300,
+                    restarts = 100,
                     iter = 5000,
                     G = x,
                     verbose = FALSE,
