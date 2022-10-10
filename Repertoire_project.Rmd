@@ -2212,7 +2212,7 @@ basic rules. For examples, let's assume that morphs are useful particles
 of communication if they are unique to one group ('distinct.group'), one meaning ('distinct.goal'), or
 if they improve our uncertainty about the meaning of the gesture action
 (reduced entropy; 'entropy.goal'). These were calculated above, and we can now extract
-the morphs that fulfill either of these conditions.
+the morphs that fulfil either of these conditions.
 
 ```{r morph_sum}
 morphs <- cluster_transposed$morph.summary
