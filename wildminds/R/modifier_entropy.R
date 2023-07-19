@@ -10,6 +10,7 @@
 #' @param plot.action a string of the gesture action of interest
 #' @param cutoff minimum number of times a modifier level should occur to be counted
 #' @param target vector of the same length as the gesture_action variable
+#' @param method either 'shuffle' (pvalues are established by shuffling target across all cases), 'upsample' (shuffling, but controlling for cluster probabilities), or 'bootstrap' (pvalues are established by comparing each level against the distribution across all other levels). The second should be more reliable if levels are very imbalanced
 #'
 #' @return Data frame with the modifier, their level, the number of occurrences, the ratio observed/expected entropy, and a p-value (proportion of expected entropy values that are smaller than the observed value)
 #'
@@ -27,13 +28,14 @@ modifier_entropy <- function(data,
                              modifiers,
                              gesture_action,
                              plot.action,
+                             remove_unknown = FALSE,
+                             remove_play = FALSE,
                              cutoff = 1,
-                             target) {
+                             target,
+                             method = 'shuffle') {
   # define gesture action column
   gesture.action.all <- data %>%
-    select(gesture_action) %>%
-    unlist() %>%
-    as.vector() %>%
+    pull(gesture_action) %>%
     suppressMessages()
 
   # select modifier data
@@ -43,6 +45,20 @@ modifier_entropy <- function(data,
 
   # select target
   target.act <- target[gesture.action.all == plot.action]
+
+  # remove unknown or other Goals
+  if(remove_unknown){
+    rem <- !(target.act %in% c('Unknown', 'Unclear', 'Other', 'StaySame'))
+    target.act <- target.act[rem]
+    modifier.data <- modifier.data[rem,]
+  }
+
+  # remove unknown or other Goals
+  if(remove_play){
+    rem <- !(target.act %in% c('Play', 'PlayContinue'))
+    target.act <- target.act[rem]
+    modifier.data <- modifier.data[rem,]
+  }
 
   # make Flexion and Orientation for back etc
   if ('Flexion_elbow' %in% colnames(modifier.data)) {
@@ -130,7 +146,7 @@ modifier_entropy <- function(data,
   # remove modifier levels that occur fewer than cutoff
   xx <- unlist(modifier.data) %>%
     table()
-  xx <- xx[xx > cutoff] %>%
+  xx <- xx[xx >= cutoff] %>%
     names()
   for (i in 1:ncol(modifier.data)) {
     modifier.data[, i] <-
@@ -171,11 +187,7 @@ modifier_entropy <- function(data,
       entropy.observed = 0,
       entropy.expected = 0,
       entropy.ratio = 1,
-      pvalue.entropy = 0,
-      JS.observed = 0,
-      JS.expected = 0,
-      JS.ratio = 1,
-      pvalue.JS = 0
+      pvalue.entropy = 0
     ) %>%
       drop_na())
   }
@@ -231,11 +243,7 @@ modifier_entropy <- function(data,
         entropy.observed = NA,
         entropy.expected = NA,
         entropy.ratio = NA,
-        pvalue.entropy = NA,
-        JS.observed = NA,
-        JS.expected = NA,
-        JS.ratio = NA,
-        pvalue.JS = NA
+        pvalue.entropy = NA
       )
     )
   }
@@ -252,6 +260,7 @@ modifier_entropy <- function(data,
 
   all.dist <-
     target.act %>%
+    na.omit() %>%
     Table() %>%
     sort() %>%
     data.frame() %>%
@@ -270,72 +279,96 @@ modifier_entropy <- function(data,
       # run loop across levels of modifier x
       mod.levels <-
         lapply(unique(modifier.data.ran[, x]) %>% na.omit(), function(k) {
-          # calculate distribution of target within level of modifier
-          dist.obs <-
-            target.act[modifier.data[, x] == k & !is.na(modifier.data[,x])] %>%
-            Table() %>%
-            sort() %>%
-            data.frame() %>%
-            rownames_to_column('target') %>%
-            rename("Freq" = ".") %>%
-            right_join(all.order, by = 'target') %>%
-            replace_na(list('Freq' = 0)) %>%
-            arrange(target) %>%
-            select(Freq) %>%
-            unlist(F, F) %>%
-            as.numeric()
 
           # calculate expected entropy of that distribution
           ent.obs <-
-            -sum(dist.obs / sum(dist.obs) * log2(dist.obs / sum(dist.obs)),
-                 na.rm = TRUE)
+            infotheo::condentropy(X = target.act[modifier.data[, x] == k & !is.na(modifier.data[,x])])
 
-          # calculate the JS distance between the overall distribution of target levels and that within the modifier level
-          dist.obs.stan <- dist.obs
-          dist.obs.stan[dist.obs.stan == 0] <- 0.001
-          dist.obs.stan <- dist.obs.stan / sum(dist.obs.stan)
+          if(method == 'shuffle'){
+            # run randomisation
+            ran.ent <- lapply(1:100, function(y) {
+              # calculate distribution of target within level of modifier after randomisation
+              dist.ran <-
+                target.act[sample(modifier.data.ran[, x] %>% na.omit) == k] %>%
+                na.omit() %>%
+                Table() %>%
+                sort() %>%
+                data.frame() %>%
+                rownames_to_column('target') %>%
+                rename("Freq" = ".") %>%
+                right_join(all.order, by = 'target') %>%
+                replace_na(list('Freq' = 0)) %>%
+                arrange(target) %>%
+                select(Freq) %>%
+                unlist(F, F) %>%
+                as.numeric()
 
-          all.dist.stan <- all.dist / sum(all.dist)
+              # calculate entropy of target distribution for randomised modifier level
+              ent.ran <-
+                infotheo::condentropy(X = target.act[sample(modifier.data.ran[, x] %>% na.omit) == k])
 
-          n <- 0.5 * (dist.obs.stan + all.dist.stan)
-          JS.obs <-
-            0.5 * (sum(dist.obs.stan * log(dist.obs.stan / n)) + sum(all.dist.stan * log(all.dist.stan / n)))
 
-          # run randomisation
-          ran.ent <- lapply(1:100, function(y) {
-            # calculate distribution of target within level of modifier after randomisation
-            dist.ran <-
-              target.act[sample(modifier.data.ran[, x] %>% na.omit) == k] %>%
-              Table() %>%
-              sort() %>%
-              data.frame() %>%
-              rownames_to_column('target') %>%
-              rename("Freq" = ".") %>%
-              right_join(all.order, by = 'target') %>%
-              replace_na(list('Freq' = 0)) %>%
-              arrange(target) %>%
-              select(Freq) %>%
-              unlist(F, F) %>%
-              as.numeric()
+              return(list(entropy = ent.ran))
+            })
 
-            # calculate entropy of target distribution for randomised modifier level
-            ent.ran <-
-              -sum(dist.ran /
-                     sum(dist.ran) *
-                     log2(dist.ran / sum(dist.ran)),
-                   na.rm = TRUE)
+          }
 
-            # calculate the JS distance between the overall distribution of target levels and that of the randomised modifier level
-            dist.ran.stan <- dist.ran
-            dist.ran.stan[dist.ran.stan == 0] <- 0.001
-            dist.ran.stan <- dist.ran.stan / sum(dist.ran.stan)
-            n <- 0.5 * (dist.ran.stan + all.dist.stan)
-            JS.ent <-
-              0.5 * (sum(dist.ran.stan * log(dist.ran.stan / n)) + sum(all.dist.stan * log(all.dist.stan / n)))
+          if(method == 'upsample'){
+            # run randomisation
 
-            return(list(entropy = ent.ran,
-                        JS.divergence = JS.ent))
-          })
+            max.outcome <- (modifier.data.ran[, x] %>% table() %>% max()) + 1
+            add_rows <- sapply(unique(modifier.data.ran[, x]) %>% na.omit(), function(i){
+              which.outcome <- which(i == modifier.data.ran[, x])
+              return(sample(x = rep(which.outcome, 2),
+                            size = (max.outcome - length(which.outcome)),
+                            replace = TRUE))
+            }) %>% unlist()
+            add_input <- modifier.data.ran[add_rows,] %>%
+              data.frame()
+            add_target <- target.act[add_rows]
+
+            modifier.data.ran.up <- rbind(modifier.data.ran, add_input)
+            target.act.up <- c(target.act, add_target)
+
+            ran.ent <- lapply(1:100, function(y) {
+
+              # calculate entropy of target distribution for randomised modifier level
+              ent.ran <-
+                infotheo::condentropy(X = target.act.up[sample(modifier.data.ran.up[, x] %>% na.omit) == k])
+
+              return(list(entropy = ent.ran))
+            })
+
+          }
+
+
+          if(method == 'bootstrap'){
+            # run randomisation
+            ran.ent <- lapply(1:100, function(y) {
+              # calculate distribution of target within level of modifier after randomisation
+              dist.ran <-
+                sample(target.act[modifier.data[, x] != k & !is.na(modifier.data[,x])], replace = T) %>%
+                na.omit() %>%
+                Table() %>%
+                sort() %>%
+                data.frame() %>%
+                rownames_to_column('target') %>%
+                rename("Freq" = ".") %>%
+                right_join(all.order, by = 'target') %>%
+                replace_na(list('Freq' = 0)) %>%
+                arrange(target) %>%
+                select(Freq) %>%
+                unlist(F, F) %>%
+                as.numeric()
+
+              # calculate entropy of target distribution for randomised modifier level
+              ent.ran <-
+                infotheo::condentropy(X = sample(target.act[modifier.data[, x] != k & !is.na(modifier.data[,x])], replace = T))
+
+              return(list(entropy = ent.ran))
+            })
+
+          }
 
           # transpose
           ran.ent <- purrr::transpose(ran.ent)
@@ -352,14 +385,7 @@ modifier_entropy <- function(data,
                 ent.obs / unlist(ran.ent$entropy, F, F)[unlist(ran.ent$entropy, F, F) > 0]
               ), na.rm = T),
               pvalue.entropy = sum(unlist(ran.ent$entropy, F, F) <= ent.obs) /
-                length(ran.ent$entropy),
-              JS.observed = JS.obs,
-              JS.expected = unlist(ran.ent$JS.divergence, F, F) %>% mean(na.rm = TRUE),
-              JS.ratio = mean((
-                JS.obs / unlist(ran.ent$JS.divergence, F, F)
-              ), na.rm = T),
-              pvalue.JS = sum(unlist(ran.ent$JS.divergence, F, F) >= JS.obs) /
-                length(ran.ent$JS.divergence)
+                length(ran.ent$entropy)
             )
           )
         })

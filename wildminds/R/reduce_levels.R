@@ -922,22 +922,26 @@ reduce_levels <- function(data,
   # if user wants to reduce Goals, the following are combined
   if (reduce.goals) {
     data$Goal <- data$Goal %>%
-      str_replace_all(pattern = "GroomMe", replacement = "Groom") %>%
-      str_replace_all(pattern = "GroomMe2", replacement = "Groom") %>%
-      str_replace_all(pattern = "GroomYou", replacement = "Groom") %>%
-      str_replace_all(pattern = "Groom2", replacement = "Groom") %>%
-      str_replace_all(pattern = "AttendMe", replacement = "DirectAttention") %>%
       str_replace_all(pattern = "AffilationContact", replacement = "AffilationContact") %>%
-      str_replace_all(pattern = "AffilationDistant", replacement = "AffiliationDistant") %>%
+      str_replace_all(pattern = "AffilationDistant", replacement = "AffilationOther") %>%
       str_replace_all(pattern = "AffilationMeContact", replacement = "AffilationContact") %>%
-      str_replace_all(pattern = "AffilationRestContact", replacement = "AffiliationRestContact") %>%
-      str_replace_all(pattern = "AffilationUnclear", replacement = "AffilationContact") %>%
+      str_replace_all(pattern = "AffilationRestContact", replacement = "AffilationOther") %>%
+      str_replace_all(pattern = "AffilationUnclear", replacement = "AffilationOther") %>%
       str_replace_all(pattern = "AffilationYouContact", replacement = "AffilationContact") %>%
+      str_replace_all(pattern = "AttendMe", replacement = "AttendMe") %>%
       str_replace_all(pattern = "GiveMeActive", replacement = "GiveMe") %>%
       str_replace_all(pattern = "GiveMePassive", replacement = "GiveMe") %>%
+      str_replace_all(pattern = "GroomMe", replacement = "GroomMe") %>%
+      str_replace_all(pattern = "GroomMe2", replacement = "GroomMe") %>%
+      str_replace_all(pattern = "GroomYou", replacement = "Groom") %>%
+      str_replace_all(pattern = "Groom2", replacement = "Groom") %>%
+      str_replace_all(pattern = "GroomMe", replacement = "Groom") %>%
       str_replace_all(pattern = "MoveAway2", replacement = "MoveAway") %>%
-      str_replace_all(pattern = "PlayChangeChangeacon", replacement = "PlayChange") %>%
-      str_replace_all(pattern = "PlayChangeContactcha", replacement = "PlayChange") %>%
+      str_replace_all(pattern = "PlayChangeChangeacon", replacement = "PlayContinue") %>%
+      str_replace_all(pattern = "PlayChangeContactcha", replacement = "PlayContinue") %>%
+      str_replace_all(pattern = "PlayChange", replacement = "PlayContinue") %>%
+      str_replace_all(pattern = "PlayContinue", replacement = "PlayContinue") %>%
+      str_replace_all(pattern = "PlayStart", replacement = "Play") %>%
       str_replace_all(pattern = "SexualAttentionMe", replacement = "SexualAttention") %>%
       str_replace_all(pattern = "SexualAttentionYou", replacement = "SexualAttention") %>%
       str_replace_all(pattern = "SocioSexualAttentionMe", replacement = "SocioSexualAttention") %>%
@@ -958,19 +962,75 @@ reduce_levels <- function(data,
   # if the user chooses to combine Gestures, the following are combined
   if (reduce.gestures) {
     data$Gesture_record <- data$Gesture_record %>%
+      # Bite
       str_replace_all(pattern = "BiteThreat", replacement = "Bite") %>%
       str_replace_all(pattern = "BiteKiss", replacement = "Bite") %>%
+      # Chest Beat
       str_replace_all(pattern = "ChestBeatInformalOther", replacement = "ChestBeat") %>%
       str_replace_all(pattern = "ChestBeatInformalStanding", replacement = "ChestBeat") %>%
-      str_replace_all(pattern = "Soft", replacement = "") %>%
-      str_replace_all(pattern = "Hitting", replacement = "Hit") %>%
-      str_replace_all(pattern = "OtherClap", replacement = "Other") %>%
-      str_replace_all(pattern = "Knocking", replacement = "Knock") %>%
+      # Hit Object
+      str_replace_all(pattern = "HitObjectObject", replacement = "HitObject") %>%
+      str_replace_all(pattern = "HittingObjectObject", replacement = "HitObject") %>%
+      str_replace_all(pattern = "HitObjectSoft", replacement = "HitObject") %>%
+      str_replace_all(pattern = "HittingObjectSoft", replacement = "HitObject") %>%
+      str_replace_all(pattern = "HittingObject", replacement = "HitObject") %>%
+
+      # HitOther
+      str_replace_all(pattern = "HitOtherSoft", replacement = "HitOther") %>%
+      str_replace_all(pattern = "HittingOtherClap", replacement = "HitOther") %>%
+      str_replace_all(pattern = "HittingOtherSoft", replacement = "HitOther") %>%
+      str_replace_all(pattern = "HittingOther", replacement = "HitOther") %>%
+      str_replace_all(pattern = "HittingObjectOther", replacement = "HitOther") %>%
+      str_replace_all(pattern = "HitObjectOther", replacement = "HitOther") %>%
+
+      # Hit Self
+      str_replace_all(pattern = "HitSelfSoft", replacement = "HitSelf") %>%
+      str_replace_all(pattern = "HittingSelfSoft", replacement = "HitSelf") %>%
+      str_replace_all(pattern = "HittingSelf", replacement = "HitSelf") %>%
+
+      # Hit Bystander
+      str_replace_all(pattern = "HittingBystanderSoft", replacement = "HitBystander") %>%
+      str_replace_all(pattern = "HittingBystander", replacement = "HitBystander") %>%
+      str_replace_all(pattern = "HitBystanderSoft", replacement = "HitBystander") %>%
+
+      # Knock Object
+      str_replace_all(pattern = "KnockingObject", replacement = "KnockObject") %>%
+
+      # Leaf Clip
       str_replace_all(pattern = "LeafClipDrop", replacement = "LeafClip") %>%
+
+      # Object Mouth
+      str_replace_all(pattern = "ObjectMouthAttached", replacement = "ObjectMouth") %>%
+      str_replace_all(pattern = "ObjectMouthUnattached", replacement = "ObjectMouth") %>%
+
+      # Object Move
+      str_replace_all(pattern = "ObjectMoveAttached", replacement = "ObjectMove") %>%
+      str_replace_all(pattern = "ObjectMoveUnattached", replacement = "ObjectMove") %>%
+      str_replace_all(pattern = "RakeObject", replacement = "ObjectMove") %>%
+
+      # Poke
       str_replace_all(pattern = "Poking", replacement = "Poke") %>%
+
+      # Stomp
       str_replace_all(pattern = "Stomping", replacement = "Stomp") %>%
+
+      # Present Genitals
+      str_replace_all(pattern = "PresentGenitalsBackwards", replacement = "PresentGenitals") %>%
+      str_replace_all(pattern = "PresentGenitalsForwards", replacement = "PresentGenitals") %>%
+
+      # Rocking
+      str_replace_all(pattern = "RockingBipedal", replacement = "Rocking") %>%
+      str_replace_all(pattern = "RockingSit", replacement = "Rocking") %>%
+
+      # Touch Long
       str_replace_all(pattern = "TouchLongObject", replacement = "TouchObject") %>%
-      str_replace_all(pattern = "TouchLongOther", replacement = "Touch")
+      str_replace_all(pattern = "TouchLongOther", replacement = "Touch") %>%
+
+      # Directed
+      str_replace_all(pattern = "PresentDirected", replacement = "Present") %>%
+      str_replace_all(pattern = "SwingDirected", replacement = "Swing") %>%
+      str_replace_all(pattern = "PushDirected", replacement = "Push") %>%
+      str_replace_all(pattern = "PullDirected", replacement = "Pull")
   }
 
   if (col_names == 'original') {

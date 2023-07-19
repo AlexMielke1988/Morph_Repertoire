@@ -28,10 +28,11 @@ editor_options:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
-                      message=FALSE, 
-                      warning=FALSE)
-options(digits=3)
+                      message = FALSE, 
+                      warning = FALSE)
+options(digits = 3)
 library(kableExtra)
+library(mclust)
 library(knitr)
 library(tibble)
 library(ggplot2)
@@ -316,7 +317,7 @@ by the user after downloading it from Github.
 ## Get Data and Scripts
 
 ```{r libraries}
-devtools::load_all("~/GitHub/Morph_Repertoire/wildminds/R/")
+devtools::load_all("~/GitHub/Gestures/R package/wildminds/R/")
 ```
 
 ### Read data into object
@@ -365,7 +366,7 @@ gesture.data$Species <-
 
 ### We'll remove everything that is not an East African chimpanzee
 gesture.data <- gesture.data %>%
-  filter(Species=='EAC')
+  filter(Species == 'EAC')
 
 ```
 
@@ -437,7 +438,8 @@ clean.data.reduced <- reduce_levels(data = clean.data,
                                     reduce.body.part.contact = TRUE,
                                     reduce.object.used = TRUE,
                                     reduce.object.contacted = TRUE, 
-                                    reduce.laterality = TRUE)
+                                    reduce.laterality = TRUE, 
+                                    reduce.gestures = TRUE)
 ```
 
 One important thing that gets reduced here are the Goals - the conventions used can be found here: https://docs.google.com/spreadsheets/d/1reh5w1LMrvmr8U_o44qGbvuoWlmTvwYP/edit#gid=518609932 
@@ -486,57 +488,6 @@ actions were split based on whether they were *directed* (e.g.,
 gesture actions, to check whether these splits were meaningful in the
 first place.
 
-```{r lump_gesture_actions}
-
-split_list <- list(
-  # Hit object
-  data.frame(original = 'HitObjectObject', lumped = 'HitObject'),
-  data.frame(original = 'HittingObject', lumped = 'HitObject'),
-  data.frame(original = 'HittingObjectObject', lumped = 'HitObject'),
-  # Hit Other
-  data.frame(original = 'HitObjectOther', lumped = 'HitOther'),
-  data.frame(original = 'HittingOther', lumped = 'HitOther'),
-  data.frame(original = 'HittingOtherObject', lumped = 'HitOther'),
-  data.frame(original = 'HittingObjectOther', lumped = 'HitOther'),
-  # Hit Self
-  data.frame(original = 'HittingSelf', lumped = 'HitSelf'),
-  # Hit Other Self
-  data.frame(original = 'HittingOtherSoft', lumped = 'HitOtherSoft'),
-  # Hit Object Soft
-  data.frame(original = 'HittingObjectSoft', lumped = 'HitObjectSoft'),
-  # Hit Bystander
-  data.frame(original = 'HittingBystander', lumped = 'HitBystander'),
-  # Hit Other Clap
-  data.frame(original = 'HittingOtherClap', lumped = 'HitOtherClap'),
-  # KnockObject
-  data.frame(original = 'KnockingObject', lumped = 'KnockObject'),
-  # Poke
-  data.frame(original = 'Poking', lumped = 'Poke'),
-  # StompObject
-  data.frame(original = 'StompingObject', lumped = 'StompObject'),
-  # StompOther
-  data.frame(original = 'StompingOther', lumped = 'StompOther'),
-  # Directed
-  data.frame(original = 'PresentDirected', lumped = 'Present'),
-  data.frame(original = 'SwingDirected', lumped = 'Swing'),
-  data.frame(original = 'PushDirected', lumped = 'Push'),
-  data.frame(original = 'PullDirected', lumped = 'Pull')
-) %>% 
-  bind_rows()
-
-
-for(i in 1:nrow(split_list)){
-  clean.data.reduced$Gesture_record[clean.data.reduced$Gesture_record == split_list$original[i]] = 
-    split_list$lumped[i]
-}
-
-for(i in 1:nrow(split_list)){
-  clean.data$Gesture_record[clean.data$Gesture_record == split_list$original[i]] = 
-    split_list$lumped[i]
-}
-
-```
-
 ### Remove rare gesture actions
 
 Many gesture actions occur at very low frequencies; for example,
@@ -566,13 +517,13 @@ gesture actions that have at least `r cutoff_action` occurrences. The following 
 
 
 ```{r remove_rare}
-clean.data.reduced <- 
-  clean.data.reduced %>% 
-  filter(Gesture_record %in% 
-           names(clean.data.reduced$Gesture_record %>% 
-                   table)[clean.data.reduced$Gesture_record %>% 
-                            table >= 
-                            cutoff_action])
+# clean.data.reduced <- 
+#   clean.data.reduced %>% 
+#   filter(Gesture_record %in% 
+#            names(clean.data.reduced$Gesture_record %>% 
+#                    table)[clean.data.reduced$Gesture_record %>% 
+#                             table >= 
+#                             cutoff_action])
 
 ```
 
@@ -580,37 +531,21 @@ This leaves us with
 `r length(unique(clean.data.reduced$Gesture_record))` instead of
 `r length(unique(clean.data$Gesture_record))` gesture actions.
 
-### Remove Flexion and Orientation for Present
-
-*Present* is not supposed to have Flexion and Orientation coded, but somehow does for some of the students. Thus, I manually remove those until this has been cleaned.
-
-```{r}
-
-clean.data$Flexion[clean.data$Gesture_record == 'Present'] = NA
-clean.data$Orientation[clean.data$Gesture_record == 'Present'] = NA
-
-clean.data.reduced$Flexion[clean.data.reduced$Gesture_record == 'Present'] = NA
-clean.data.reduced$Orientation[clean.data.reduced$Gesture_record == 'Present'] = NA
-```
-
 ### Remove Repetition for Spin and Locomote variables
 
-*Present* is not supposed to have Flexion and Orientation coded, but somehow does for some of the students. Thus, I manually remove those until this has been cleaned.
+Some gesture actions are not meant to include repetition but were coded that way by some students. This is removed here.
 
-```{r}
+```{r remove_repetition}
+# Define vector of gestures to set Repetition_count to NA
+na_gestures <- c('LocomoteGallop', 'SpinPirouette', 'SpinRoulade', 'SpinSomersault')
 
-clean.data$Repetition_count[clean.data$Gesture_record == 'LocomoteGallop'] = NA
-clean.data$Repetition_count[clean.data$Gesture_record == 'SpinPirouette'] = NA
-clean.data$Repetition_count[clean.data$Gesture_record == 'SpinRoulade'] = NA
-clean.data$Repetition_count[clean.data$Gesture_record == 'SpinSomersault'] = NA
-
-clean.data.reduced$Repetition_count[clean.data.reduced$Gesture_record == 'LocomoteGallop'] = NA
-clean.data.reduced$Repetition_count[clean.data.reduced$Gesture_record == 'SpinPirouette'] = NA
-clean.data.reduced$Repetition_count[clean.data.reduced$Gesture_record == 'SpinRoulade'] = NA
-clean.data.reduced$Repetition_count[clean.data.reduced$Gesture_record == 'SpinSomersault'] = NA
+# Loop over clean.data and clean.data.reduced data frames to set Repetition_count to NA for na_gestures
+for (gesture in na_gestures) {
+  clean.data$Repetition_count[clean.data$Gesture_record == gesture] <- NA
+  clean.data.reduced$Repetition_count[clean.data.reduced$Gesture_record == gesture] <- NA
+}
 
 ```
-
 
 ### Extract relevant variables
 
@@ -624,44 +559,11 @@ whether gestures were done unimanual, bimanual, or bimanual with
 alternating movements.
 
 ```{r prepare_repertoire_columns, echo = TRUE}
+# Update Repetition column
+clean.data.reduced$Repetition <- ifelse(clean.data.reduced$Repetition_count > 0, "yes", "no")
 
-clean.data.reduced$Object_involved <-
-  ifelse((clean.data.reduced$Object_contacted == 'None' &
-            clean.data.reduced$Object_used == 'None'),
-         'None',
-         'Yes')
-
-# clean.data.reduced$Object_used <-
-#   ifelse((clean.data.reduced$Object_used == 'None'),
-#          'None',
-#          'Yes')
-# 
-# clean.data.reduced$Object_contacted <-
-#   ifelse((clean.data.reduced$Object_contacted == 'None'),
-#          'None',
-#          'Yes')
-
-clean.data.reduced$Flexion_elbow <- 
-  ifelse(str_detect(clean.data.reduced$Flexion, pattern = "Elbow"), 
-         "yes", 
-         "no")
-clean.data.reduced$Flexion_wrist <- 
-  ifelse(str_detect(clean.data.reduced$Flexion, pattern = "Wrist"), 
-         "yes", 
-         "no")
-clean.data.reduced$Flexion_finger <- 
-  ifelse(str_detect(clean.data.reduced$Flexion, pattern = "Finger"), 
-         "yes", 
-         "no")
-
-clean.data.reduced$Repetition <- 
-  ifelse(clean.data.reduced$Repetition_count > 0, 
-         "yes", 
-         "no")
-clean.data.reduced$Laterality <- 
-  ifelse(clean.data.reduced$Laterality_signaller %in% c("Left", "Right"),
-         "unimanual",
-         clean.data.reduced$Laterality_signaller)
+# Update Laterality column
+clean.data.reduced$Laterality <- ifelse(clean.data.reduced$Laterality_signaller %in% c("Left", "Right"), "unimanual", clean.data.reduced$Laterality_signaller)
 
 
 ```
@@ -677,9 +579,6 @@ g.data <- clean.data.reduced %>%
     # modifiers
     Body_part_signaller,
     Body_part_contact,
-    Flexion_wrist,
-    Flexion_elbow,
-    Orientation,
     Repetition,
     Laterality)
 
@@ -808,17 +707,21 @@ To facilitate things, we will combine modifier levels the following way:
 -   Body Part Signaller: *BodyChest* and *BodyFront* become part of *Body*, *Fist* and *Knuckles* is combined with *Hand*, *HandFoot* is combined with *Foot*. We leave *Head* alone for now.
 
 ```{r g_data_amend, echo = T}
+# Replace values in Body_part_contact column
+clean.data.reduced$Body_part_contact <- case_when(
+  clean.data.reduced$Body_part_contact == 'Fist' ~ 'Fingers_Hand',
+  clean.data.reduced$Body_part_contact %in% c('BodyChest', 'BodyFront') ~ 'Body',
+  clean.data.reduced$Body_part_contact == 'Bottom' ~ 'Leg',
+  TRUE ~ clean.data.reduced$Body_part_contact
+)
 
-clean.data.reduced$Body_part_contact[clean.data.reduced$Body_part_contact == 'Fist'] = 'Fingers_Hand'
-clean.data.reduced$Body_part_contact[clean.data.reduced$Body_part_contact == 'BodyChest'] = 'Body'
-clean.data.reduced$Body_part_contact[clean.data.reduced$Body_part_contact == 'BodyFront'] = 'Body'
-clean.data.reduced$Body_part_contact[clean.data.reduced$Body_part_contact == 'Bottom'] = 'Leg'
-
-clean.data.reduced$Body_part_signaller[clean.data.reduced$Body_part_signaller == 'Fist'] = 'Hand'
-clean.data.reduced$Body_part_signaller[clean.data.reduced$Body_part_signaller == 'Knuckles'] = 'Hand'
-clean.data.reduced$Body_part_signaller[clean.data.reduced$Body_part_signaller == 'BodyChest'] = 'Body'
-clean.data.reduced$Body_part_signaller[clean.data.reduced$Body_part_signaller == 'BodyFront'] = 'Body'
-clean.data.reduced$Body_part_signaller[clean.data.reduced$Body_part_signaller == 'HandFoot'] = 'Foot'
+# Replace values in Body_part_signaller column
+clean.data.reduced$Body_part_signaller <- case_when(
+  clean.data.reduced$Body_part_signaller %in% c('Fist', 'Knuckles') ~ 'Hand',
+  clean.data.reduced$Body_part_signaller %in% c('BodyChest', 'BodyFront') ~ 'Body',
+  clean.data.reduced$Body_part_signaller == 'HandFoot' ~ 'Foot',
+  TRUE ~ clean.data.reduced$Body_part_signaller
+)
 
 
 g.data <- clean.data.reduced %>% 
@@ -828,9 +731,6 @@ g.data <- clean.data.reduced %>%
     # modifiers
     Body_part_signaller,
     Body_part_contact,
-    Flexion_wrist,
-    Flexion_elbow,
-    Orientation,
     Repetition,
     Laterality)
 

@@ -16,15 +16,15 @@
 
 info_from_Com_number <- function(com_number_column, output = c('coder', 'group', 'species')){
   field.site.list <- data.frame(
-    code = c("10", "11", "12", "13", "14", "20", "25", "30", "31", "32", "35", "36", "40", "50", "51", "52", "60", "61", "62",
-             "70", "80", "81", "82", "90", "91", "92"),
-    coder = c("CH", "CH", "CH", "CH", "CH", "CG", "DR", "GB", "GB", "GB", "VE", "VE", "BF", "AS", "AS", "AS", "KG", "KG", "KG",
-              "AK", "LS", "LS", "LS", "MH", "MH", "MH"),
-    group = c("Sonso", "Waibira", "Bwindi", "Bossou", "Tai", "Bwindi", "Bossou", "Waibira",
-              "Kalinzu", "Issa", "Goualougo", "Goualougo", "Sonso", "Sonso", "Waibira", "Children",
-              "WambaE1", "WambaP", "Kalinzu", "Sabangau", "Tai", "Waibira", "Sonso", "Waibira", "Sonso", "Children"),
-    species = c("EAC", "EAC", "MG", "WAC", "WAC", "MG", "WAC", "EAC", "EAC", "EAC", "CAC",
-                "LG", "EAC", "EAC", "EAC", "HS", "BNB", "BNB", "EAC", "OU", "WAC", "EAC", "EAC", "EAC", "EAC", "HS" )
+    code = c("10", "11", "12", "13", "14", "20", "25", "28","30", "31", "32", "33", "35", "36", "40", "50", "51", "52", "60", "61", "62",
+              "70", "80", "81", "82", "90", "91", "92", '26', '27', '28', '29'),
+    coder = c("CH", "CH", "CH", "CH", "CH", "CG", "DR", "AS", "GB", "GB", "GB", "GB", "VE", "VE", "BF", "AS", "AS", "AS", "KG", "KG", "KG",
+               "AK", "LS", "LS", "LS", "MH", "MH", "MH", "DR", "DR", "DR", "DR"),
+    group = c("Sonso", "Waibira", "Bwindi", "Bossou", "Tai", "Bwindi", "Bossou", "Bossou", "Waibira",
+               "Kalinzu", "Issa", "Kanyawara", "Goualougo", "Goualougo", "Sonso", "Sonso", "Waibira", "Children",
+               "WambaE1", "WambaP", "Kalinzu", "Sabangau", "Tai", "Waibira", "Sonso", "Waibira", "Sonso", "Children", "VOLaranjeiro", "VOAjuda", "VOGraçaS3", "VOGraçaS4"),
+    species = c("EAC", "EAC", "MG", "WAC", "WAC", "MG", "WAC", "WAC","EAC", "EAC", "EAC", "EAC", "CAC",
+                 "LG", "EAC", "EAC", "EAC", "HS", "BNB", "BNB", "EAC", "OU", "WAC", "EAC", "EAC", "EAC", "EAC", "HS", "HS", "HS", "HS", "HS" )
   )
   unlist(com_number_column) %>%
     str_sub(1,2) %>%

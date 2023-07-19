@@ -11,7 +11,6 @@
 #' @importFrom stringr str_detect str_split str_replace_all str_to_title str_to_lower
 #' @importFrom magrittr %>%
 #' @importFrom tidyr replace_na gather separate unite
-#' @importFrom reshape2 melt
 #'
 #' @export
 #'

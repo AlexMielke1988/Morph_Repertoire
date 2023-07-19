@@ -21,23 +21,18 @@
 #' @importFrom stats na.omit
 #' @importFrom rpart rpart
 #' @importFrom BayesLCA blca.em
-#' @importFrom ggraph ggraph create_layout geom_node_text scale_edge_alpha theme_graph geom_edge_fan geom_node_label
-#' @importFrom igraph vertex.attributes vertex.attributes<- add_vertices V edge.attributes edge.attributes<- graph_from_data_frame graph.adjacency delete_edges add_vertices get.data.frame bipartite_mapping cluster_fast_greedy modularity V<-
 #'
 #' @export
 #'
 
 morph_detection_bayes <- function(data,
-                                  modifiers,
-                                  gesture_action,
-                                  plot.action,
-                                  cutoff = 1) {
+                                      modifiers,
+                                      gesture_action,
+                                      plot.action,
+                                      cutoff = 1) {
   # define gesture action column
   gesture.action.all <- data %>%
-    select(gesture_action) %>%
-    unlist() %>%
-    as.vector() %>%
-    suppressMessages()
+    pull(gesture_action)
 
   # select modifier data
   modifier.data.original <- data %>%
@@ -54,6 +49,7 @@ morph_detection_bayes <- function(data,
           modifier.data$Body_part_signaller %in% c(
             "Back",
             "Body",
+            "Bottom",
             "BodyFront",
             "BodyChest",
             "Face_Mouth",
@@ -73,6 +69,7 @@ morph_detection_bayes <- function(data,
           modifier.data$Body_part_signaller %in% c(
             "Back",
             "Body",
+            "Bottom",
             "BodyFront",
             "BodyChest",
             "Face_Mouth",
@@ -92,6 +89,7 @@ morph_detection_bayes <- function(data,
           modifier.data$Body_part_signaller %in% c(
             "Back",
             "Body",
+            "Bottom",
             "BodyFront",
             "BodyChest",
             "Face_Mouth",
@@ -111,6 +109,7 @@ morph_detection_bayes <- function(data,
           modifier.data$Body_part_signaller %in% c(
             "Back",
             "Body",
+            "Bottom",
             "BodyFront",
             "BodyChest",
             "Face_Mouth",
@@ -252,22 +251,21 @@ morph_detection_bayes <- function(data,
     step_dummy(all_nominal_predictors(),
                naming = nodash_names,
                one_hot = TRUE) %>%
-    step_rm(contains('.NV')) %>%
     step_naomit(all_numeric()) %>%
     prep() %>%
     bake(new_data = NULL)
 
-  # set number of possible clusters, repeat 10 times
+  # set number of possible clusters, repeat 5 times
   max.clusters <- apply(modifier.matr, 1,
                         function(x)
                           as.character(paste0(x, collapse = ''))) %>% table()
-  max.clusters <- max(4, sum(max.clusters > cutoff) + 1)
+  max.clusters <- max(5, sum(max.clusters > cutoff) + 1)
   clusters <- rep(1:max.clusters, 10) %>% sort
 
   # fit for all possible cluster solutions
   fits <- lapply(clusters, function(x) {
     fit1 <- blca.em(modifier.matr,
-                    restarts = 100,
+                    restarts = 200,
                     iter = 5000,
                     G = x,
                     verbose = FALSE,
@@ -276,8 +274,8 @@ morph_detection_bayes <- function(data,
       suppressWarnings()
   })
 
-  # extract sample size, BIC, and clusters for each run
-  results.fit <- lapply(fits, function(x){
+
+  results.fit <- lapply(fits, function(x) {
     return(data.frame(BIC = x$BIC))
   }) %>% bind_rows() %>%
     mutate(clusters = clusters,
@@ -302,40 +300,157 @@ morph_detection_bayes <- function(data,
            }))
 
   # remove those that have fewer than cutoff values
-  results.fit$min_cluster_size[results.fit$clusters == 1] <- nrow(modifier.data)
+  results.fit$min_cluster_size[results.fit$clusters == 1] <-
+    nrow(modifier.data)
   results.fit$BIC[results.fit$min_cluster_size < cutoff] = NA
-
-  # take all cluster solutions that have at least one run within the 10 points of best BIC, and choose the one with the least variation
-  best.solution <- results.fit %>%
-    filter(
-      clusters %in%
-        (results.fit %>%
-           filter(BIC >= (max(BIC, na.rm = TRUE) - 10)) %>%
-           pull(clusters))) %>%
-    group_by(clusters) %>%
-    summarise(sd = sd(BIC, na.rm = TRUE)) %>%
-    ungroup() %>%
-    filter(sd == min(sd, na.rm = TRUE)) %>%
-    pull(clusters) %>%
-    max()
-
+  results.fit <- results.fit %>% mutate(rownr = row_number())
 
   # pull the fit for the best model of those with the selected number of clusters
-  fit.best <- fits[[
-    which(clusters ==
-            best.solution)[
-              sapply(fits[which(clusters ==
-                                  best.solution)],
-                     function(x) x$BIC) %>%
-                which.max()]
-  ]]
 
-  if(best.solution == 1){
-    matrix.umap <- cbind(modifier.data,
-                                 .cluster = 1,
-                                 .rownames = rownames(modifier.data))
+  distinctions <- sapply(seq_along(results.fit$clusters), function(k) {
+    fit.best <- fits[[k]]
+
+    if (length(fit.best$classprob) == 1) {
+      matrix.lca <- cbind(modifier.data,
+                          .cluster = 1,
+                          .rownames = rownames(modifier.data))
+    }
+    if (length(fit.best$classprob) > 1) {
+      if (nrow(fit.best$Z) == nrow(modifier.matr)) {
+        grouping <-
+          apply(fit.best$Z, 1, function(x)
+            sample(names(x), 1, prob = x)) %>%
+          str_remove('Group ')
+      }
+
+      if (nrow(fit.best$Z) != nrow(modifier.matr)) {
+        labels_df <-
+          apply(fit.best$Z, 1, function(x)
+            sample(names(x), 1, prob = x))
+        row_sequence <- apply(modifier.matr, 1,
+                              function(x)
+                                as.character(paste0(x, collapse = '')))
+        grouping <- labels_df[row_sequence] %>% str_remove('Group ')
+      }
+
+      matrix.lca <-
+        cbind(
+          modifier.data,
+          .cluster = as.numeric(grouping),
+          .rownames = rownames(modifier.data)
+        )
+    }
+    ### create information for elements and bigrams, how specific are they to each cluster
+
+    # save modifier data
+    # modifier.data <- modifier.data %>%
+    #   filter(gesture.action == plot.action)
+
+    # create list that contains all observed modifier levels per event
+
+    # for (i in 1:ncol(modifier.data)) {
+    #   modifier.data[str_detect(modifier.data[, i], '.NV'), i] = NA
+    # }
+    #
+
+    xx.list <- lapply(1:nrow(modifier.data), function(y) {
+      modifier.data[y, ] %>%
+        unlist(use.names = FALSE) %>%
+        na.omit() %>%
+        unlist(use.names = FALSE) %>%
+        sort() %>%
+        as.character()
+    })
+
+    # create list that contains all possible modifier levels per event
+    xx.list.non.na <- lapply(1:nrow(modifier.data), function(y) {
+      colnames(modifier.matr)[!is.na(modifier.matr[y, ])] %>%
+        sort() %>%
+        as.character()
+    })
+
+
+    ## make list for all clusters that contain all possible combinations occurring in the cluster, how often they occurred, and how specific they were to that cluster
+    cluster_info <-
+      lapply(unique(matrix.lca$.cluster), function(x) {
+        xx.cluster <-
+          probability_of_combination(xx.list[matrix.lca$.cluster == x], maxlen = ncol(modifier.data))
+        xx.possible <-
+          probability_of_combination(xx.list.non.na[matrix.lca$.cluster == x], maxlen = ncol(modifier.data))
+        xx.all <-
+          probability_of_combination(xx.list, maxlen = ncol(modifier.data))
+
+        #### figure out which one is probability and which one is specificity!
+        xx.combinations <- xx.cluster %>%
+          left_join(xx.possible %>% dplyr::select(combination, count), by = 'combination') %>%
+          mutate(probability = count.x / count.y) %>%
+          dplyr::select(-count.y) %>%
+          left_join(xx.all %>% dplyr::select(combination, count), by = 'combination') %>%
+          mutate(specificity = count.x / count) %>%
+          dplyr::select(-count) %>%
+          mutate(count.cluster = count.x) %>%
+          mutate(modifier = combination) %>%
+          dplyr::select(modifier,
+                        count.cluster,
+                        probability,
+                        specificity,
+                        nr.rules) %>%
+          mutate(cluster = x,
+                 gesture_action = plot.action)
+
+        return(xx.combinations)
+      })
+
+    names(cluster_info) <- unique(matrix.lca$.cluster)
+
+    summary_morphs <- cluster_info %>%
+      bind_rows() %>%
+      filter(probability == 1 & specificity == 1) %>%
+      distinct(cluster, .keep_all = T) %>%
+      pull(cluster) %>%
+      unlist(F, F) %>%
+      as.numeric() %>%
+      unique() %>%
+      sort()
+
+    if(length(summary_morphs) < length(unique(matrix.lca$.cluster))){
+      xx.additional <-
+        additional_rules(cluster_info, summary_morphs) %>%
+        pull(cluster) %>%
+        unique()
+      summary_morphs <- sort(c(summary_morphs, xx.additional))
+    }
+
+
+    distinction_info <-
+      data.frame(
+        nr.clusters = matrix.lca$.cluster %>% as.numeric() %>% max(),
+        nr.clusters.distinct = length(summary_morphs)
+      )
+
+    return(distinction_info$nr.clusters - distinction_info$nr.clusters.distinct)
+  })
+
+  results.fit$distinctions <- distinctions
+  if(0 %in% distinctions|1 %in% distinctions){
+    fit.best <- fits[[results.fit %>%
+                        filter(distinctions %in% c(0,1)) %>%
+                        arrange(desc(BIC)) %>%
+                        head(1) %>%
+                        pull(rownr)]]
   }
-  if(best.solution > 1){
+  if(!(0 %in% distinctions|1 %in% distinctions)){
+    fit.best <- fits[[results.fit$BIC %>% which.max()]]
+  }
+
+  # pull the fit for the best model of those with the selected number of clusters
+
+  if (length(fit.best$classprob) == 1) {
+    matrix.lca <- cbind(modifier.data,
+                        .cluster = 1,
+                        .rownames = rownames(modifier.data))
+  }
+  if (length(fit.best$classprob) > 1) {
 
     if(nrow(fit.best$Z) == nrow(modifier.matr)){
       grouping <-
@@ -354,7 +469,7 @@ morph_detection_bayes <- function(data,
       grouping <- labels_df[row_sequence] %>% str_remove('Group ')
     }
 
-    matrix.umap <-
+    matrix.lca <-
       cbind(modifier.data,
             .cluster = as.numeric(grouping),
             .rownames = rownames(modifier.data))
@@ -368,9 +483,9 @@ morph_detection_bayes <- function(data,
 
   # create list that contains all observed modifier levels per event
 
-  for (i in 1:ncol(modifier.data)) {
-    modifier.data[str_detect(modifier.data[, i], '.NV'), i] = NA
-  }
+  # for (i in 1:ncol(modifier.data)) {
+  #   modifier.data[str_detect(modifier.data[, i], '.NV'), i] = NA
+  # }
 
 
   xx.list <- lapply(1:nrow(modifier.data), function(y) {
@@ -392,20 +507,22 @@ morph_detection_bayes <- function(data,
 
   ## make list for all clusters that contain all possible combinations occurring in the cluster, how often they occurred, and how specific they were to that cluster
   cluster_info <-
-    lapply(unique(matrix.umap$.cluster), function(x) {
+    lapply(unique(matrix.lca$.cluster), function(x) {
       xx.cluster <-
-        probability_of_combination(xx.list[matrix.umap$.cluster == x], maxlen = ncol(modifier.data))
+        probability_of_combination(xx.list[matrix.lca$.cluster == x], maxlen = ncol(modifier.data))
       xx.possible <-
-        probability_of_combination(xx.list.non.na[matrix.umap$.cluster == x], maxlen = ncol(modifier.data))
+        probability_of_combination(xx.list.non.na[matrix.lca$.cluster == x], maxlen = ncol(modifier.data))
       xx.all <-
         probability_of_combination(xx.list, maxlen = ncol(modifier.data))
 
       #### figure out which one is probability and which one is specificity!
       xx.combinations <- xx.cluster %>%
-        left_join(xx.possible %>% dplyr::select(combination, count), by = 'combination') %>%
+        left_join(xx.possible %>%
+                    dplyr::select(combination, count), by = 'combination') %>%
         mutate(probability = count.x / count.y) %>%
         dplyr::select(-count.y) %>%
-        left_join(xx.all %>% dplyr::select(combination, count), by = 'combination') %>%
+        left_join(xx.all %>%
+                    dplyr::select(combination, count), by = 'combination') %>%
         mutate(specificity = count.x / count) %>%
         dplyr::select(-count) %>%
         mutate(count.cluster = count.x) %>%
@@ -421,7 +538,7 @@ morph_detection_bayes <- function(data,
       return(xx.combinations)
     })
 
-  names(cluster_info) <- unique(matrix.umap$.cluster)
+  names(cluster_info) <- unique(matrix.lca$.cluster)
 
   summary_morphs <- cluster_info %>%
     bind_rows() %>%
@@ -433,273 +550,26 @@ morph_detection_bayes <- function(data,
     unique() %>%
     sort()
 
+  if(length(summary_morphs) < length(unique(matrix.lca$.cluster))){
+    xx.additional <-
+      additional_rules(cluster_info, summary_morphs) %>%
+      pull(cluster) %>%
+      unique()
+    summary_morphs <- sort(c(summary_morphs, xx.additional))
+  }
+
+
   distinction_info <-
     data.frame(
-      nr.clusters = matrix.umap$.cluster %>% as.numeric() %>% max(),
+      nr.clusters = matrix.lca$.cluster %>% as.numeric() %>% max(),
       nr.clusters.distinct = length(summary_morphs)
     )
 
-  distinction_info.first <- distinction_info
-
-  ### often, not all cases have a clearly identifiable cluster attached. Rerun cluster detection only on those cases
-  if ((distinction_info$nr.clusters - distinction_info$nr.clusters.distinct) >= 1) {
-
-    unclear.data <-
-      matrix.umap %>%
-      filter(!(.cluster %in% summary_morphs | is.na(.cluster))) %>%
-      select(-.cluster, -.rownames)
-
-    modifier.remove <-
-      unclear.data %>%
-      apply(2, table) %>%
-      sapply(length)
-
-    unclear.data <- unclear.data %>%
-      rownames_to_column('row.nums') %>%
-      select(c(row.nums, names(modifier.remove[modifier.remove > 1]))) %>%
-      drop_na() %>%
-      column_to_rownames('row.nums')
-
-    if (ncol(unclear.data) >= 1) {
-      # remove modifier levels that occur fewer than cutoff
-      xx <- unlist(unclear.data) %>%
-        table()
-      xx <- xx[xx > cutoff] %>%
-        names()
-
-      for (i in 1:ncol(unclear.data)) {
-        unclear.data[, i] <-
-          ifelse(!(unlist(unclear.data[, i]) %in% xx),
-                 NA,
-                 unlist(unclear.data[, i]))
-      }
-
-      modifier.remove <- unclear.data %>%
-        apply(2, table) %>%
-        sapply(length)
-      unclear.data <- unclear.data %>%
-        rownames_to_column('row.nums') %>%
-        select(c(row.nums, names(modifier.remove[modifier.remove > 1]))) %>%
-        drop_na() %>%
-        column_to_rownames('row.nums')
-
-      if (ncol(unclear.data) == 1) {
-        if (colnames(unclear.data) == '.') {
-          colnames(unclear.data) =
-            str_split(unclear.data[1, 1], pattern = '\\.') %>%
-            unlist() %>%
-            head(1)
-        }
-      }
-
-
-      if (ncol(unclear.data) >= 1) {
-        rownums <- unclear.data %>%
-          rownames_to_column('.rownames') %>%
-          pull(.rownames)
-
-        modifier.matr.unclear <- recipe( ~ ., data = unclear.data) %>%
-          step_dummy(all_nominal_predictors(),
-                     naming = nodash_names,
-                     one_hot = TRUE) %>%
-          step_rm(contains('.NV')) %>%
-          step_naomit(all_numeric()) %>%
-          prep() %>%
-          bake(new_data = NULL)
-
-        # set number of possible clusters, repeat 10 times
-        max.clusters <- apply(modifier.matr, 1,
-                              function(x)
-                                as.character(paste0(x, collapse = ''))) %>% table()
-        max.clusters <- max(4, sum(max.clusters > cutoff) + 1)
-        clusters <- rep(1:max.clusters, 10) %>% sort
-
-        # fit for all possible cluster solutions
-        fits <- lapply(clusters, function(x) {
-          fit1 <- blca.em(modifier.matr.unclear,
-                          restarts = 300,
-                          iter = 5000,
-                          G = x,
-                          verbose = FALSE,
-                          conv = 1e-08,
-                          start.vals = 'across') %>%
-            suppressWarnings()
-        })
-
-        # extract sample size, BIC, and clusters for each run
-        results.fit.unclear <- lapply(fits, function(x){
-          return(data.frame(BIC = x$BIC))
-        }) %>% bind_rows() %>%
-          mutate(clusters = clusters,
-                 min_cluster_size = sapply(fits, function(x) {
-                   if (x$classprob %>% length() > 1) {
-                     x$Z <- x$Z
-                     labels_df <-
-                       apply(x$Z, 1, function(y)
-                         sample(names(y), 1, prob = y))
-                     data.frame(labels_df) %>%
-                       rownames_to_column('label') %>%
-                       left_join(x$counts %>%
-                                   data.frame() %>%
-                                   rownames_to_column('label')) %>%
-                       group_by(labels_df) %>%
-                       summarise(sums = sum(.)) %>%
-                       pull(sums) %>%
-                       min() %>%
-                       suppressMessages()
-                   }
-                 }))
-
-        # remove those that have fewer than cutoff values
-        results.fit.unclear$min_cluster_size[results.fit.unclear$clusters == 1] <- nrow(modifier.matr.unclear)
-        results.fit.unclear$BIC[results.fit.unclear$min_cluster_size <= (cutoff - 2)] = NA
-
-        # take all cluster solutions that have at least one run within the 10 points of best BIC, and choose the one with the least variation
-        best.solution <- results.fit.unclear %>%
-          filter(
-            clusters %in%
-              (results.fit.unclear %>%
-                 filter(BIC >= (max(BIC, na.rm = T) - 10)) %>%
-                 pull(clusters))) %>%
-          group_by(clusters) %>%
-          summarise(sd = sd(BIC, na.rm = TRUE)) %>%
-          ungroup() %>%
-          filter(sd == min(sd, na.rm = TRUE)) %>%
-          pull(clusters)%>%
-          max()
-
-
-        # pull the fit for the best model of those with the selected number of clusters
-        fit.best <- fits[[
-          which(clusters ==
-                  best.solution)[
-                    sapply(fits[which(clusters ==
-                                        best.solution)],
-                           function(x) x$BIC) %>%
-                      which.max()]
-        ]]
-
-
-        if(best.solution == 1){
-          matrix.umap.unclear <- cbind(unclear.data,
-                                       .cluster = 1,
-                                       .rownames = rownames(unclear.data))
-        }
-        if(best.solution > 1){
-          # assign labels
-          labels_df <-
-            apply(fit.best$Z, 1, function(x)
-              sample(names(x), 1, prob = x))
-          row_sequence <- apply(modifier.matr.unclear, 1,
-                                function(x)
-                                  as.character(paste0(x, collapse = '')))
-          grouping <- labels_df[row_sequence] %>% str_remove('Group ')
-
-          matrix.umap.unclear <- cbind(unclear.data,
-                                       .cluster = as.numeric(grouping),
-                                       .rownames = rownames(unclear.data))
-        }
-
-
-        if (!('.rownames' %in% colnames(matrix.umap.unclear))) {
-          matrix.umap.unclear <- matrix.umap.unclear %>%
-            rownames_to_column('.rownames')
-        }
-
-        matrix.umap <- matrix.umap %>%
-          left_join(matrix.umap.unclear %>% select(.rownames, .cluster), by = '.rownames')
-
-        matrix.umap$.cluster <-
-          ifelse(
-            is.na(matrix.umap$.cluster.y),
-            matrix.umap$.cluster.x,
-            as.numeric(matrix.umap$.cluster.y) + 100
-          )
-        matrix.umap$.cluster <-
-          as.numeric(as.factor(matrix.umap$.cluster))
-
-        matrix.umap <- matrix.umap %>%
-          select(-.cluster.x,-.cluster.y)
-
-
-        xx.list <- lapply(1:nrow(modifier.data), function(y) {
-          modifier.data[y,] %>%
-            unlist(use.names = FALSE) %>%
-            na.omit() %>%
-            unlist(use.names = FALSE) %>%
-            sort() %>%
-            as.character()
-        })
-
-        # create list that contains all possible modifier levels per event
-        xx.list.non.na <-
-          lapply(1:nrow(modifier.data), function(y) {
-            colnames(modifier.matr)[!is.na(modifier.matr[y,])] %>%
-              sort() %>%
-              as.character()
-          })
-
-
-        ## make list for all clusters that contain all possible combinations occurring in the cluster, how often they occurred, and how specific they were to that cluster
-        cluster_info <-
-          lapply(unique(matrix.umap$.cluster), function(x) {
-            xx.cluster <-
-              probability_of_combination(xx.list[matrix.umap$.cluster == x], maxlen = ncol(modifier.data))
-            xx.possible <-
-              probability_of_combination(xx.list.non.na[matrix.umap$.cluster == x], maxlen = ncol(modifier.data))
-            xx.all <-
-              probability_of_combination(xx.list, maxlen = ncol(modifier.data))
-
-            #### figure out which one is probability and which one is specificity!
-            xx.combinations <- xx.cluster %>%
-              left_join(xx.possible %>% select(combination, count), by = 'combination') %>%
-              mutate(probability = count.x / count.y) %>%
-              select(-count.y) %>%
-              left_join(xx.all %>% select(combination, count), by = 'combination') %>%
-              mutate(specificity = count.x / count) %>%
-              select(-count) %>%
-              mutate(count.cluster = count.x) %>%
-              mutate(modifier = combination) %>%
-              select(modifier,
-                     count.cluster,
-                     probability,
-                     specificity,
-                     nr.rules) %>%
-              mutate(cluster = x,
-                     gesture_action = plot.action)
-
-            return(xx.combinations)
-          })
-
-        names(cluster_info) <- unique(matrix.umap$.cluster)
-
-
-        summary_morphs <- cluster_info %>%
-          bind_rows() %>%
-          filter(probability == 1 & specificity == 1) %>%
-          pull(cluster) %>%
-          unlist(F, F) %>%
-          as.numeric() %>%
-          unique() %>%
-          sort()
-
-        distinction_info <-
-          data.frame(
-            nr.clusters = matrix.umap$.cluster %>%
-              unique() %>%
-              length(),
-            nr.clusters.distinct = length(summary_morphs)
-          )
-      }
-    }
-  }
-
-  # add clusters to full data
   full.data <- modifier.data.original %>%
     rownames_to_column('row.nums') %>%
     mutate(row.nums = as.numeric(row.nums)) %>%
     left_join(cbind(
-      matrix.umap %>%
+      matrix.lca %>%
         data.frame() %>%
         select(.rownames, .cluster) %>%
         mutate(rownums = as.numeric(.rownames),
@@ -726,9 +596,10 @@ morph_detection_bayes <- function(data,
 
 
 
-  if (max(matrix.umap$.cluster, na.rm = T) > 1) {
+  if (max(matrix.lca$.cluster, na.rm = T) > 1) {
     p3 <- plot_bipartite(
-      prob.table = cluster_info %>% filter(nr.rules == 1),
+      prob.table = cluster_info %>%
+        filter(nr.rules == 1),
       select.modifier = "cluster",
       plot.title = plot.action,
       cutoff = cutoff,
@@ -737,19 +608,19 @@ morph_detection_bayes <- function(data,
     )
   }
 
-  if (max(matrix.umap$.cluster, na.rm = T) > 1) {
+  if (max(matrix.lca$.cluster, na.rm = T) > 1) {
     # repeat data to make it easier to cluster
     aa <- bind_rows(
       cbind(modifier.data,
-            cluster = as.factor(matrix.umap$.cluster)),
+            cluster = as.factor(matrix.lca$.cluster)),
       cbind(modifier.data,
-            cluster = as.factor(matrix.umap$.cluster)),
+            cluster = as.factor(matrix.lca$.cluster)),
       cbind(modifier.data,
-            cluster = as.factor(matrix.umap$.cluster)),
+            cluster = as.factor(matrix.lca$.cluster)),
       cbind(modifier.data,
-            cluster = as.factor(matrix.umap$.cluster)),
+            cluster = as.factor(matrix.lca$.cluster)),
       cbind(modifier.data,
-            cluster = as.factor(matrix.umap$.cluster))
+            cluster = as.factor(matrix.lca$.cluster))
     )
 
     multi.class.model <- rpart(cluster ~ .,
@@ -767,11 +638,12 @@ morph_detection_bayes <- function(data,
     # p4 <- recordPlot()
     var_importance <- multi.class.model$variable.importance / 5
   }
-  if (max(matrix.umap$.cluster, na.rm = T) <= 1) {
+  if (max(matrix.lca$.cluster, na.rm = T) <= 1) {
     multi.class.model <- NA
     var_importance <- NA
     p3 <- NA
   }
+
 
   return(
     list(
@@ -783,8 +655,8 @@ morph_detection_bayes <- function(data,
       solutions = results.fit,
       solution.plot = p2,
       distinction.info = distinction_info,
-      distinction_info.first = distinction_info.first,
-      full.data = full.data
+      full.data = full.data,
+      results.fit = results.fit
     )
   )
 }
@@ -826,203 +698,128 @@ possible_combinations <- function(elements, maxlen) {
 }
 
 
-additional_rules <- function(morphs_nonspec, clus_sol) {
+
+
+
+additional_rules <- function(cluster_info, summary_morphs) {
   additional.rules <-
-    lapply(seq_along(morphs_nonspec$cluster), function(x) {
+    lapply(setdiff(cluster_info %>% bind_rows %>% pull(cluster), summary_morphs), function(x) {
       # select gesture action and cluster number
-      ga <- morphs_nonspec$gesture_action[x]
-      cn <- morphs_nonspec$cluster[x]
 
+      add_rules <-
+        lapply(1:max(cluster_info %>%
+                       bind_rows() %>%
+                       filter(cluster == x) %>%
+                       pull(nr.rules) %>%
+                       max()), function(m){
 
-      # for single modifiers, check if any combination within the same modifier adds up to 1 and is specified
-      cs <- clus_sol[[ga]]$cluster.info %>%
-        filter(cluster == cn & nr.rules == 1) %>%
-        separate(
-          modifier,
-          into = c('mod', 'lev'),
-          sep = '\\.',
-          remove = FALSE
-        ) %>%
-        filter(specificity == 1)
+                         cs <- cluster_info %>%
+                           bind_rows() %>%
+                           filter(nr.rules == m &
+                                    cluster == x &
+                                    specificity == 1) %>%
+                           separate(modifier,
+                                    into = str_c('m',
+                                                 1:m,
+                                                 sep = ''),
+                                    sep = '\\:')
 
-      cs.prob <- cs %>%
-        group_by(mod) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1)
+                         if(nrow(cs) == 0){
+                           return(cluster_info %>%
+                                    bind_rows() %>%
+                                    filter(cluster == 1.5))
+                         }
 
-      cs.rules <- cs %>%
-        filter(mod %in% cs.prob$mod) %>%
-        select(-mod,-lev)
+                         if(m == 1){
+                           cs_mod <- cs %>%
+                             separate(m1,
+                                      into = c('mod', 'lev'),
+                                      sep = '\\.',
+                                      remove = FALSE)
+                           cs_agg <- aggregate(cs_mod$probability,
+                                               by = list(cs_mod$mod), sum) %>%
+                             filter(x == 1)
+                           if(nrow(cs_agg > 0)){
+                             cs_agg <- cs_mod %>%
+                               left_join(cs_agg, by = c('mod' = 'Group.1')) %>%
+                               suppressMessages() %>%
+                               filter(x == 1) %>%
+                               select(-mod, -lev, -x) %>%
+                               unite(modifier, str_c('m',
+                                                     1:m,
+                                                     sep = ''), sep = ':')
+                           }
+                           comb_probs <- cs_agg
+                         }
 
-      # for combination, do the same
-      cs.combo <- clus_sol[[ga]]$cluster.info %>%
-        filter(cluster == cn & nr.rules == 2) %>%
-        separate(
-          modifier,
-          into = c('modifier1', 'modifier2'),
-          sep = '\\:',
-          remove = FALSE
-        ) %>%
-        separate(
-          modifier1,
-          into = c('mod1', 'lev1'),
-          sep = '\\.',
-          remove = FALSE
-        ) %>%
-        separate(
-          modifier2,
-          into = c('mod2', 'lev2'),
-          sep = '\\.',
-          remove = FALSE
-        ) %>%
-        filter(specificity == 1)
+                         if(m > 1){
+                           combs <- expand.grid(
+                             rep(list(str_c('m',
+                                            1:m,
+                                            sep = '')
+                             ), m)) %>%
+                             distinct() %>%
+                             data.frame() %>%
+                             select(- c(m))
 
-      cs.prob.combo1 <- cs.combo %>%
-        group_by(modifier1, mod2) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
+                           combs <- combs[
+                             sapply(1:nrow(combs), function(k) (table(combs[k,] %>%
+                                                                        unlist()) %>%
+                                                                  max()) == 1),]
+                           if(m > 2){
+                             combs <- sapply(1:nrow(combs),
+                                             function(k)
+                                               str_c(sort(combs[k,] %>% unlist()), collapse = '_')
+                             ) %>%
+                               unique()
+                           }
+                           if(m == 2){
+                             combs <- sapply(1:length(combs),
+                                             function(k)
+                                               str_c(sort(combs[k] %>% unlist()), collapse = '_')
+                             ) %>%
+                               unique()
+                           }
 
-      cs.prob.combo2 <- cs.combo %>%
-        group_by(modifier2, mod1) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
+                           comb_probs <- lapply(combs, function(k){
+                             cols <- str_split(k, '_') %>% unlist()
+                             cs_mod <- cs %>%
+                               separate(setdiff(str_c('m',
+                                                      1:m,
+                                                      sep = ''),
+                                                cols),
+                                        into = c('mod', 'lev'),
+                                        sep = '\\.',
+                                        remove = FALSE)
+                             cs_agg <- aggregate(cs_mod$probability,
+                                                 by = cs_mod[,c(cols, 'mod')], sum) %>%
+                               filter(x == 1)
 
-      # For triplets as well
+                             cs_agg <- cs_mod %>%
+                               left_join(cs_agg) %>%
+                               suppressMessages() %>%
+                               filter(x == 1) %>%
+                               select(-mod, -lev, -x) %>%
+                               unite(modifier, str_c('m',
+                                                     1:m,
+                                                     sep = ''), sep = ':')
 
-      cs.triplet <-
-        clus_sol[[ga]]$cluster.info %>%
-        filter(cluster == cn & nr.rules == 3) %>%
-        separate(
-          modifier,
-          into = c('modifier1', 'modifier2', 'modifier3'),
-          sep = '\\:',
-          remove = FALSE
-        ) %>%
-        separate(
-          modifier1,
-          into = c('mod1', 'lev1'),
-          sep = '\\.',
-          remove = FALSE
-        ) %>%
-        separate(
-          modifier2,
-          into = c('mod2', 'lev2'),
-          sep = '\\.',
-          remove = FALSE
-        ) %>%
-        separate(
-          modifier3,
-          into = c('mod3', 'lev3'),
-          sep = '\\.',
-          remove = FALSE
-        ) %>%
-        filter(specificity == 1)
+                             return(cs_agg)
+                           }) %>%
+                             bind_rows() %>%
+                             distinct()
+                         }
 
-      cs.prob.triplet1 <- cs.triplet %>%
-        group_by(modifier1, modifier2, mod3) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
-      cs.prob.triplet2 <- cs.triplet %>%
-        group_by(modifier2, modifier1, mod3) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
-      cs.prob.triplet3 <- cs.triplet %>%
-        group_by(modifier1, modifier3, mod2) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
-      cs.prob.triplet4 <- cs.triplet %>%
-        group_by(modifier3, modifier1, mod2) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
-      cs.prob.triplet5 <- cs.triplet %>%
-        group_by(modifier2, modifier3, mod1) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
-      cs.prob.triplet6 <- cs.triplet %>%
-        group_by(modifier3, modifier2, mod1) %>%
-        summarise(probability = sum(probability)) %>%
-        ungroup() %>%
-        filter(probability == 1) %>%
-        suppressMessages()
+                         return(comb_probs)
+                       }) %>% bind_rows()
 
-      colnames(cs.prob.triplet1) =
-        colnames(cs.prob.triplet2) =
-        colnames(cs.prob.triplet3) =
-        colnames(cs.prob.triplet4) =
-        colnames(cs.prob.triplet5) =
-        colnames(cs.prob.triplet6) =
-        c('modifier1', 'modifier2', 'modifier3', 'probability')
-
-      cs.prob.triplet =
-        bind_rows(
-          cs.prob.triplet1,
-          cs.prob.triplet2,
-          cs.prob.triplet3,
-          cs.prob.triplet4,
-          cs.prob.triplet5,
-          cs.prob.triplet6
-        )
-
-      cs.rules.combo <- cs.combo %>%
-        filter(
-          modifier1 %in% cs.prob.combo1$modifier1 |
-            modifier2 %in% cs.prob.combo2$modifier2
-        ) %>%
-        select(-modifier1,-modifier2,-lev1,-lev2,-mod1,-mod2)
-
-      if (nrow(cs.triplet) == 0) {
-        cs.rules.triplet <- cs.triplet %>%
-          select(-modifier1,-modifier2,-modifier3,-lev1,-lev2,-lev3,-mod1,-mod2,-mod3)
+      if(nrow(add_rules) > 0){
+        add_rules <- add_rules %>%
+          filter(nr.rules == min(add_rules$nr.rules))
       }
-      if (nrow(cs.triplet) > 0) {
-        cs.rules.triplet <-
-          lapply(1:nrow(cs.triplet), function(y) {
-            if (sum(
-              c(
-                cs.triplet$modifier1[y],
-                cs.triplet$modifier2[y],
-                cs.triplet$modifier3[y]
-              ) %in%
-              c(
-                cs.prob.triplet$modifier1,
-                cs.prob.triplet$modifier2
-              )
-            ) == 2) {
-              return(cs.triplet[y, ])
-            }
-            if (sum(
-              c(
-                cs.triplet$modifier1[y],
-                cs.triplet$modifier2[y],
-                cs.triplet$modifier3[y]
-              ) %in%
-              c(
-                cs.prob.triplet$modifier1,
-                cs.prob.triplet$modifier2
-              )
-            ) != 2) {
-              return(cs.triplet[0, ])
-            }
-          }) %>%
-          bind_rows() %>%
-          select(-modifier1,-modifier2,-modifier3,-lev1,-lev2,-lev3,-mod1,-mod2,-mod3)
-      }
-      return(bind_rows(cs.rules, cs.rules.combo, cs.rules.triplet))
-    }) %>% bind_rows()
+
+      return(add_rules)
+    })  %>% bind_rows()
   return(additional.rules)
 }
+

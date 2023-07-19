@@ -46,7 +46,7 @@ error_detection <- function(data, col_names = "renamed") {
 
   gesture.definitions <- gesture.definitions %>%
     select(
-      -.data$Definition
+      -Definition
     )
 
 
@@ -138,10 +138,10 @@ error_detection <- function(data, col_names = "renamed") {
   gesture.definitions$Body_sgn <-
     sapply(gesture.definitions$Body_sgn, function(x) {
       x <- ifelse(test = str_detect(x, "Any"),
-                  yes = data$Body_part_signaller %>% 
-                    unlist() %>% 
-                    unique() %>% 
-                    sort %>% 
+                  yes = data$Body_part_signaller %>%
+                    unlist() %>%
+                    unique() %>%
+                    sort %>%
                     paste(collapse = ', '),
                   no = x
       )
@@ -260,9 +260,9 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Object_Contact) &
         sel.data$Object_Contact != 'None') {
       Object_contacted <- data %>%
-        filter(.data$Object_contacted != "None" &
-                 .data$Object_contacted != "NotApplicable") %>%
-        select(.data$Object_contacted) %>%
+        filter(Object_contacted != "None" &
+                Object_contacted != "NotApplicable") %>%
+        select(Object_contacted) %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
         c(NA)
@@ -275,9 +275,9 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$With_object) &
         sel.data$With_object == "Value") {
       Object_used <- data %>%
-        filter(.data$Object_used != "None" &
-                 .data$Object_used != "NotApplicable") %>%
-        select(.data$Object_used) %>%
+        filter(Object_used != "None" &
+                Object_used != "NotApplicable") %>%
+        select(Object_used) %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
         c(NA)
@@ -285,7 +285,7 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$With_object) &
         sel.data$With_object == "Ambiguous") {
       Object_used <- data %>%
-        select(.data$Object_used) %>%
+        select(Object_used) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
@@ -304,8 +304,8 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Flexion) &
         sel.data$Flexion == 'Ambiguous_with_NA') {
       Flexion <- data %>%
-        filter(.data$Flexion != 'NotApplicable') %>%
-        select(.data$Flexion) %>%
+        filter(Flexion != 'NotApplicable') %>%
+        select(Flexion) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
@@ -322,8 +322,8 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Flexion) &
         sel.data$Flexion == 'Ambiguous_without_NA') {
       Flexion <- data %>%
-        filter(.data$Flexion != 'NotApplicable') %>%
-        select(.data$Flexion) %>%
+        filter(Flexion != 'NotApplicable') %>%
+        select(Flexion) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE)
@@ -336,8 +336,8 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Orientation) &
         sel.data$Orientation == 'Ambiguous_with_NA') {
       Orientation <- data %>%
-        filter(.data$Orientation != 'NotApplicable') %>%
-        select(.data$Orientation) %>%
+        filter(Orientation != 'NotApplicable') %>%
+        select(Orientation) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
@@ -346,7 +346,7 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Orientation) &
         sel.data$Orientation == 'Ambiguous') {
       Orientation <- data %>%
-        select(.data$Orientation) %>%
+        select(Orientation) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
@@ -355,8 +355,8 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Orientation) &
         sel.data$Orientation == 'Ambiguous_without_NA') {
       Orientation <- data %>%
-        filter(.data$Orientation != 'NotApplicable') %>%
-        select(.data$Orientation) %>%
+        filter(Orientation != 'NotApplicable') %>%
+        select(Orientation) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE)
@@ -364,9 +364,9 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Orientation) &
         sel.data$Orientation == 'Value') {
       Orientation <- data %>%
-        filter(.data$Orientation != 'NotApplicable' &
-                 .data$Orientation != 'NoValue') %>%
-        select(.data$Orientation) %>%
+        filter(Orientation != 'NotApplicable' &
+                Orientation != 'NoValue') %>%
+        select(Orientation) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE)
@@ -379,9 +379,9 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Sgn_lat) &
         sel.data$Sgn_lat == 'Ambiguous') {
       Sgn_lat <- data %>%
-        filter(.data$Laterality_signaller != 'NotApplicable' &
-                 .data$Laterality_signaller != 'None') %>%
-        select(.data$Laterality_signaller) %>%
+        filter(Laterality_signaller != 'NotApplicable' &
+                Laterality_signaller != 'None') %>%
+        select(Laterality_signaller) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
@@ -390,9 +390,9 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Sgn_lat) &
         sel.data$Sgn_lat == 'Value') {
       Sgn_lat <- data %>%
-        filter(.data$Laterality_signaller != 'NotApplicable' &
-                 .data$Laterality_signaller != 'None') %>%
-        select(.data$Laterality_signaller) %>%
+        filter(Laterality_signaller != 'NotApplicable' &
+                Laterality_signaller != 'None') %>%
+        select(Laterality_signaller) %>%
         drop_na() %>%
         unique() %>%
         unlist(use.names = FALSE)
@@ -405,16 +405,16 @@ error_detection <- function(data, col_names = "renamed") {
     if (!is.na(sel.data$Body_con) &
         sel.data$Body_con == "Value") {
       Body_con <- data %>%
-        filter(.data$Body_part_contact != "None" &
-                 .data$Body_part_contact != "NotApplicable") %>%
-        select(.data$Body_part_contact) %>%
+        filter(Body_part_contact != "None" &
+                Body_part_contact != "NotApplicable") %>%
+        select(Body_part_contact) %>%
         unique() %>%
         unlist(use.names = FALSE)
     }
     if (!is.na(sel.data$Body_con) &
         sel.data$Body_con == "Ambiguous") {
       Body_con <- data %>%
-        select(.data$Body_part_contact) %>%
+        select(Body_part_contact) %>%
         unique() %>%
         unlist(use.names = FALSE) %>%
         c(NA)
@@ -440,27 +440,27 @@ error_detection <- function(data, col_names = "renamed") {
       values <- error.list[[x]][[y]]
       test.column <- unlist(data[, names(error.list[[x]])[y]], F, F)
       xx <- data %>%
-        filter(.data$Gesture_record == names(error.list)[x] &
+        filter(Gesture_record == names(error.list)[x] &
                  !(test.column %in% values)) %>%
         select(
-          .data$Coder,
-          .data$Communication_number,
-          .data$Recording_number,
-          .data$Date,
-          .data$Signaller,
-          .data$Clip_name,
-          .data$Gesture_record,
-          .data$row.number,
+         Coder,
+         Communication_number,
+         Recording_number,
+         Date,
+         Signaller,
+         Clip_name,
+         Gesture_record,
+         row.number,
           names(error.list[[x]])[y]
         ) %>%
         mutate(problematic.column = names(error.list[[x]])[y]) %>%
         select(
-          .data$Coder,
-          .data$Communication_number,
-          .data$Recording_number,
-          .data$Gesture_record,
-          .data$problematic.column,
-          .data$row.number
+         Coder,
+         Communication_number,
+         Recording_number,
+         Gesture_record,
+         problematic.column,
+         row.number
         ) %>%
         data.frame(stringsAsFactors = FALSE)
 
@@ -563,7 +563,7 @@ error_detection <- function(data, col_names = "renamed") {
     bind_rows(possible.errors,
               or,
               fl) %>%
-    arrange(row.number) %>% 
+    arrange(row.number) %>%
     distinct(.keep_all = TRUE)
 
   return(possible.errors)

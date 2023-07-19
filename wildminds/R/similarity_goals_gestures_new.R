@@ -24,8 +24,6 @@
 #' @importFrom FactoMineR CA
 #' @importFrom factoextra fviz_ca_row
 #' @importFrom stats as.dendrogram order.dendrogram
-#' @importFrom ggraph ggraph create_layout geom_node_text scale_edge_alpha theme_graph geom_edge_fan geom_node_label
-#' @importFrom igraph vertex.attributes vertex.attributes<- add_vertices V edge.attributes edge.attributes<- graph_from_data_frame graph.adjacency delete_edges add_vertices get.data.frame bipartite_mapping cluster_fast_greedy modularity V<- walktrap.community graph_from_edgelist
 #'
 #' @export
 #'
