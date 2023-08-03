@@ -125,7 +125,7 @@ have at least 10 occurrences. The following gesture action are removed:
   data.frame() %>% 
   rename('Gesture_record' = '.') %>% 
   rename('Frequency' = 'Freq')  %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -133,27 +133,27 @@ have at least 10 occurrences. The following gesture action are removed:
   kable_styling(font_size = 12)
 ```
 
-| Gesture_record F | requency |
-|------------------|:---------|
-| gesture_token_12 | 3        |
-| gesture_token_14 | 1        |
-| gesture_token_18 | 1        |
-| gesture_token_23 | 7        |
-| gesture_token_25 | 2        |
-| gesture_token_27 | 1        |
-| gesture_token_28 | 2        |
-| gesture_token_30 | 1        |
-| gesture_token_34 | 3        |
-| gesture_token_46 | 7        |
-| gesture_token_47 | 9        |
-| gesture_token_50 | 6        |
-| gesture_token_56 | 1        |
-| gesture_token_57 | 6        |
-| gesture_token_59 | 6        |
-| gesture_token_6  | 1        |
-| gesture_token_60 | 6        |
-| gesture_token_61 | 5        |
-| gesture_token_7  | 3        |
+|  Gesture_record  | Frequency |
+|:----------------:|:---------:|
+| gesture_token_12 |     3     |
+| gesture_token_14 |     1     |
+| gesture_token_18 |     1     |
+| gesture_token_23 |     7     |
+| gesture_token_25 |     2     |
+| gesture_token_27 |     1     |
+| gesture_token_28 |     2     |
+| gesture_token_30 |     1     |
+| gesture_token_34 |     3     |
+| gesture_token_46 |     7     |
+| gesture_token_47 |     9     |
+| gesture_token_50 |     6     |
+| gesture_token_56 |     1     |
+| gesture_token_57 |     6     |
+| gesture_token_59 |     6     |
+| gesture_token_6  |     1     |
+| gesture_token_60 |     6     |
+| gesture_token_61 |     5     |
+| gesture_token_7  |     3     |
 
 ``` r
 gesture.data <-
@@ -297,18 +297,18 @@ not occurring in any of the other clusters (specificity = 1).
 xx.OS$cluster.info %>% 
   filter(probability == 1 & 
            specificity == 1) %>% 
-  kable(format = 'simple',
+  kable(format = 'pipe',
         row.names = NA,
         align = "c",
         booktabs = T) %>% 
   kable_styling(font_size = 9)
 ```
 
-| modifier count.cluster probabili                             | ty specificity | nr.rules | cluster ges | ture_action |     |             |
-|--------------------------------------------------------------|----------------|:--------:|------------:|-------------|-----|-------------|
-| Body_part_signaller.Hand:Laterality.unimanual:Repetition.yes | 402            |    1     |           1 | 3           | 1   | ObjectShake |
-| Repetition.no                                                | 17             |    1     |           1 | 1           | 4   | ObjectShake |
-| Body_part_signaller.Foot:Repetition.yes                      | 18             |    1     |           1 | 2           | 3   | ObjectShake |
+|                           modifier                           | count.cluster | probability | specificity | nr.rules | cluster | gesture_action |
+|:------------------------------------------------------------:|:-------------:|:-----------:|:-----------:|:--------:|:-------:|:--------------:|
+| Body_part_signaller.Hand:Laterality.unimanual:Repetition.yes |      402      |      1      |      1      |    3     |    1    |  ObjectShake   |
+|                        Repetition.no                         |      17       |      1      |      1      |    1     |    4    |  ObjectShake   |
+|           Body_part_signaller.Foot:Repetition.yes            |      18       |      1      |      1      |    2     |    3    |  ObjectShake   |
 
 Using a network graph, we can visualise the connections between morphs
 and different modifiers.
@@ -389,7 +389,7 @@ entropy.OS %>%
          entropy.observed,
          entropy.expected,
          pvalue.entropy) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -397,15 +397,15 @@ entropy.OS %>%
   kable_styling(font_size = 10)
 ```
 
-| modifier            |              level count | entro | py.observed entro | py.expected pvalu | e.entropy |
-|:--------------------|-------------------------:|------:|-------------------|-------------------|:----------|
-| Body_part_signaller | Body_part_signaller.Hand |   524 | 1.61              | 1.64              | 0.00      |
-| Body_part_signaller | Body_part_signaller.Foot |    19 | 0.90              | 1.38              | 0.01      |
-| Repetition          |           Repetition.yes |   531 | 1.63              | 1.64              | 0.15      |
-| Repetition          |            Repetition.no |    17 | 1.20              | 1.35              | 0.31      |
-| Laterality          |     Laterality.unimanual |   389 | 1.55              | 1.63              | 0.00      |
-| Laterality          |          Laterality.Both |   132 | 1.71              | 1.61              | 0.93      |
-| Laterality          |   Laterality.Alternating |    10 | 1.28              | 1.24              | 0.59      |
+|      modifier       |          level           | count | entropy.observed | entropy.expected | pvalue.entropy |
+|:-------------------:|:------------------------:|:-----:|:----------------:|:----------------:|:--------------:|
+| Body_part_signaller | Body_part_signaller.Hand |  524  |       1.61       |       1.64       |      0.00      |
+| Body_part_signaller | Body_part_signaller.Foot |  19   |       0.90       |       1.38       |      0.01      |
+|     Repetition      |      Repetition.yes      |  531  |       1.63       |       1.64       |      0.15      |
+|     Repetition      |      Repetition.no       |  17   |       1.20       |       1.35       |      0.31      |
+|     Laterality      |   Laterality.unimanual   |  389  |       1.55       |       1.63       |      0.00      |
+|     Laterality      |     Laterality.Both      |  132  |       1.71       |       1.61       |      0.93      |
+|     Laterality      |  Laterality.Alternating  |  10   |       1.28       |       1.24       |      0.59      |
 
 ``` r
 # run the same entropy approach but for the clusters - does any of them reduce uncertainty?
@@ -427,7 +427,7 @@ entropy.OS.cluster %>%
          entropy.observed,
          entropy.expected,
          pvalue.entropy) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -436,11 +436,11 @@ entropy.OS.cluster %>%
 ```
 
 | modifier |   level   | count | entropy.observed | entropy.expected | pvalue.entropy |
-|:---------|:---------:|:------|:-----------------|:-----------------|:---------------|
-| .        | cluster.1 | 402   | 1.69             | 1.75             | 0.02           |
-| .        | cluster.2 | 135   | 1.75             | 1.72             | 0.60           |
-| .        | cluster.4 | 17    | 1.20             | 1.45             | 0.17           |
-| .        | cluster.3 | 18    | 1.23             | 1.48             | 0.11           |
+|:--------:|:---------:|:-----:|:----------------:|:----------------:|:--------------:|
+|    .     | cluster.1 |  402  |       1.69       |       1.75       |      0.02      |
+|    .     | cluster.2 |  135  |       1.75       |       1.72       |      0.60      |
+|    .     | cluster.4 |  17   |       1.20       |       1.45       |      0.17      |
+|    .     | cluster.3 |  18   |       1.23       |       1.48       |      0.11      |
 
 ## Cluster Detection
 
@@ -792,7 +792,7 @@ sapply(purrr::transpose(gesture_clusters)$full.data,
   select(-Var1) %>% 
   rename('Number_of_moprhs' = '.',
          'Count' = 'Freq') %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T) %>% 
@@ -800,14 +800,14 @@ sapply(purrr::transpose(gesture_clusters)$full.data,
 ```
 
 | Number_of_moprhs | Count |
-|:-----------------|:------|
-| 1                | 17    |
-| 2                | 6     |
-| 3                | 7     |
-| 4                | 4     |
-| 5                | 1     |
-| 6                | 5     |
-| 7                | 2     |
+|:----------------:|:-----:|
+|        1         |  17   |
+|        2         |   6   |
+|        3         |   7   |
+|        4         |   4   |
+|        5         |   1   |
+|        6         |   5   |
+|        7         |   2   |
 
 ### Split Rules
 
@@ -848,7 +848,7 @@ split_importance %>%
   rownames_to_column(var = "variable") %>% 
   arrange(variable) %>% 
   column_to_rownames('variable') %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -856,50 +856,50 @@ split_importance %>%
   kable_styling(font_size = 9)
 ```
 
-| Body_part_contact | Body_part_signaller | Laterality Repet | ition |      |
-|-------------------|--------------------:|-----------------:|:------|------|
-| ObjectShake       |                0.00 |             0.20 | 1.00  | 0.17 |
-| gesture_token_1   |                0.00 |             1.00 | 0.00  | 0.00 |
-| gesture_token_10  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_11  |                1.00 |             0.00 | 0.70  | 0.00 |
-| gesture_token_13  |                0.00 |             1.00 | 0.00  | 0.00 |
-| gesture_token_15  |                1.00 |             0.00 | 0.22  | 0.00 |
-| gesture_token_16  |                0.79 |             0.00 | 1.00  | 0.00 |
-| gesture_token_17  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_19  |                0.00 |             0.61 | 1.00  | 0.87 |
-| gesture_token_2   |                1.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_20  |                0.61 |             0.47 | 1.00  | 0.55 |
-| gesture_token_21  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_22  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_24  |                0.00 |             1.00 | 0.00  | 0.00 |
-| gesture_token_26  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_29  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_3   |                1.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_31  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_32  |                0.00 |             0.00 | 1.00  | 0.00 |
-| gesture_token_35  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_36  |                0.00 |             1.00 | 0.28  | 0.00 |
-| gesture_token_37  |                0.00 |             1.00 | 0.00  | 0.00 |
-| gesture_token_38  |                1.00 |             0.00 | 0.47  | 0.00 |
-| gesture_token_39  |                1.00 |             0.62 | 0.17  | 0.00 |
-| gesture_token_4   |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_40  |                0.00 |             1.00 | 0.37  | 0.00 |
-| gesture_token_41  |                0.00 |             1.00 | 0.00  | 0.00 |
-| gesture_token_42  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_43  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_44  |                0.54 |             0.88 | 0.00  | 1.00 |
-| gesture_token_45  |                0.00 |             1.00 | 0.82  | 0.09 |
-| gesture_token_48  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_49  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_5   |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_51  |                0.00 |             0.06 | 1.00  | 0.53 |
-| gesture_token_52  |                0.93 |             0.00 | 0.50  | 1.00 |
-| gesture_token_53  |                0.21 |             1.00 | 0.00  | 0.98 |
-| gesture_token_54  |                0.00 |             1.00 | 0.00  | 0.00 |
-| gesture_token_55  |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_58  |                1.00 |             0.50 | 0.01  | 0.00 |
-| gesture_token_8   |                0.00 |             0.00 | 0.00  | 0.00 |
-| gesture_token_9   |                0.00 |             0.00 | 0.00  | 0.00 |
+|                  | Body_part_contact | Body_part_signaller | Laterality | Repetition |
+|:-----------------|:-----------------:|:-------------------:|:----------:|:----------:|
+| ObjectShake      |       0.00        |        0.20         |    1.00    |    0.17    |
+| gesture_token_1  |       0.00        |        1.00         |    0.00    |    0.00    |
+| gesture_token_10 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_11 |       1.00        |        0.00         |    0.70    |    0.00    |
+| gesture_token_13 |       0.00        |        1.00         |    0.00    |    0.00    |
+| gesture_token_15 |       1.00        |        0.00         |    0.22    |    0.00    |
+| gesture_token_16 |       0.79        |        0.00         |    1.00    |    0.00    |
+| gesture_token_17 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_19 |       0.00        |        0.61         |    1.00    |    0.87    |
+| gesture_token_2  |       1.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_20 |       0.61        |        0.47         |    1.00    |    0.55    |
+| gesture_token_21 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_22 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_24 |       0.00        |        1.00         |    0.00    |    0.00    |
+| gesture_token_26 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_29 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_3  |       1.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_31 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_32 |       0.00        |        0.00         |    1.00    |    0.00    |
+| gesture_token_35 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_36 |       0.00        |        1.00         |    0.28    |    0.00    |
+| gesture_token_37 |       0.00        |        1.00         |    0.00    |    0.00    |
+| gesture_token_38 |       1.00        |        0.00         |    0.47    |    0.00    |
+| gesture_token_39 |       1.00        |        0.62         |    0.17    |    0.00    |
+| gesture_token_4  |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_40 |       0.00        |        1.00         |    0.37    |    0.00    |
+| gesture_token_41 |       0.00        |        1.00         |    0.00    |    0.00    |
+| gesture_token_42 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_43 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_44 |       0.54        |        0.88         |    0.00    |    1.00    |
+| gesture_token_45 |       0.00        |        1.00         |    0.82    |    0.09    |
+| gesture_token_48 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_49 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_5  |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_51 |       0.00        |        0.06         |    1.00    |    0.53    |
+| gesture_token_52 |       0.93        |        0.00         |    0.50    |    1.00    |
+| gesture_token_53 |       0.21        |        1.00         |    0.00    |    0.98    |
+| gesture_token_54 |       0.00        |        1.00         |    0.00    |    0.00    |
+| gesture_token_55 |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_58 |       1.00        |        0.50         |    0.01    |    0.00    |
+| gesture_token_8  |       0.00        |        0.00         |    0.00    |    0.00    |
+| gesture_token_9  |       0.00        |        0.00         |    0.00    |    0.00    |
 
 If we plot the average impact of each modifier in gesture actions where
 they occur (standardising the impact of all modifiers within gesture
@@ -1000,7 +1000,7 @@ clear_morphs <- clear_morphs %>%
   replace_na(list('clear.rule' = 0))
 
 clear_morphs %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1008,106 +1008,106 @@ clear_morphs %>%
   kable_styling(font_size = 12)
 ```
 
-| gesture_action c | luster c | ount c | lear.rule |
-|------------------|----------|--------|:----------|
-| ObjectShake      | 1        | 402    | 1         |
-| ObjectShake      | 2        | 135    | 0         |
-| ObjectShake      | 3        | 18     | 1         |
-| ObjectShake      | 4        | 17     | 1         |
-| gesture_token_1  | 1        | 18     | 1         |
-| gesture_token_1  | 2        | 12     | 1         |
-| gesture_token_11 | 1        | 34     | 1         |
-| gesture_token_11 | 2        | 23     | 1         |
-| gesture_token_11 | 3        | 19     | 1         |
-| gesture_token_11 | 4        | 5      | 1         |
-| gesture_token_13 | 1        | 70     | 1         |
-| gesture_token_13 | 2        | 28     | 1         |
-| gesture_token_15 | 1        | 47     | 1         |
-| gesture_token_15 | 2        | 43     | 0         |
-| gesture_token_15 | 3        | 41     | 1         |
-| gesture_token_15 | 4        | 28     | 1         |
-| gesture_token_15 | 5        | 26     | 1         |
-| gesture_token_15 | 6        | 17     | 1         |
-| gesture_token_16 | 1        | 53     | 0         |
-| gesture_token_16 | 2        | 31     | 1         |
-| gesture_token_16 | 3        | 25     | 1         |
-| gesture_token_19 | 1        | 294    | 1         |
-| gesture_token_19 | 2        | 60     | 1         |
-| gesture_token_19 | 3        | 39     | 1         |
-| gesture_token_19 | 4        | 34     | 0         |
-| gesture_token_19 | 5        | 32     | 1         |
-| gesture_token_19 | 6        | 16     | 1         |
-| gesture_token_2  | 1        | 344    | 1         |
-| gesture_token_2  | 2        | 219    | 1         |
-| gesture_token_2  | 3        | 183    | 1         |
-| gesture_token_2  | 4        | 74     | 1         |
-| gesture_token_2  | 5        | 24     | 0         |
-| gesture_token_2  | 6        | 6      | 1         |
-| gesture_token_20 | 1        | 113    | 0         |
-| gesture_token_20 | 2        | 55     | 1         |
-| gesture_token_20 | 3        | 55     | 0         |
-| gesture_token_20 | 4        | 34     | 0         |
-| gesture_token_20 | 5        | 30     | 0         |
-| gesture_token_20 | 6        | 29     | 1         |
-| gesture_token_24 | 1        | 31     | 1         |
-| gesture_token_24 | 2        | 19     | 1         |
-| gesture_token_3  | 1        | 19     | 0         |
-| gesture_token_3  | 2        | 42     | 1         |
-| gesture_token_3  | 3        | 25     | 1         |
-| gesture_token_3  | 4        | 25     | 1         |
-| gesture_token_32 | 1        | 211    | 1         |
-| gesture_token_32 | 2        | 37     | 1         |
-| gesture_token_36 | 1        | 197    | 1         |
-| gesture_token_36 | 2        | 144    | 1         |
-| gesture_token_36 | 3        | 120    | 1         |
-| gesture_token_36 | 4        | 94     | 1         |
-| gesture_token_36 | 5        | 50     | 1         |
-| gesture_token_36 | 6        | 21     | 1         |
-| gesture_token_36 | 7        | 13     | 0         |
-| gesture_token_37 | 1        | 283    | 1         |
-| gesture_token_37 | 2        | 60     | 1         |
-| gesture_token_38 | 1        | 59     | 0         |
-| gesture_token_38 | 2        | 54     | 1         |
-| gesture_token_38 | 3        | 44     | 1         |
-| gesture_token_38 | 4        | 25     | 1         |
-| gesture_token_39 | 1        | 99     | 1         |
-| gesture_token_39 | 2        | 92     | 0         |
-| gesture_token_39 | 3        | 65     | 1         |
-| gesture_token_39 | 4        | 54     | 1         |
-| gesture_token_39 | 5        | 47     | 1         |
-| gesture_token_39 | 6        | 18     | 1         |
-| gesture_token_39 | 7        | 16     | 1         |
-| gesture_token_40 | 1        | 201    | 1         |
-| gesture_token_40 | 2        | 24     | 1         |
-| gesture_token_40 | 3        | 8      | 1         |
-| gesture_token_41 | 1        | 370    | 1         |
-| gesture_token_41 | 2        | 191    | 1         |
-| gesture_token_41 | 3        | 16     | 1         |
-| gesture_token_44 | 1        | 21     | 1         |
-| gesture_token_44 | 2        | 19     | 1         |
-| gesture_token_44 | 3        | 7      | 1         |
-| gesture_token_45 | 1        | 36     | 1         |
-| gesture_token_45 | 2        | 23     | 1         |
-| gesture_token_45 | 3        | 16     | 0         |
-| gesture_token_51 | 1        | 213    | 1         |
-| gesture_token_51 | 2        | 93     | 1         |
-| gesture_token_51 | 3        | 49     | 1         |
-| gesture_token_51 | 4        | 38     | 1         |
-| gesture_token_51 | 5        | 13     | 1         |
-| gesture_token_51 | 6        | 8      | 1         |
-| gesture_token_52 | 1        | 12     | 1         |
-| gesture_token_52 | 2        | 8      | 1         |
-| gesture_token_52 | 3        | 6      | 1         |
-| gesture_token_53 | 1        | 16     | 1         |
-| gesture_token_53 | 2        | 12     | 1         |
-| gesture_token_53 | 3        | 8      | 1         |
-| gesture_token_54 | 1        | 259    | 1         |
-| gesture_token_54 | 2        | 18     | 1         |
-| gesture_token_58 | 1        | 144    | 0         |
-| gesture_token_58 | 2        | 117    | 0         |
-| gesture_token_58 | 3        | 88     | 1         |
-| gesture_token_58 | 4        | 54     | 1         |
-| gesture_token_58 | 5        | 44     | 0         |
+|  gesture_action  | cluster | count | clear.rule |
+|:----------------:|:-------:|:-----:|:----------:|
+|   ObjectShake    |    1    |  402  |     1      |
+|   ObjectShake    |    2    |  135  |     0      |
+|   ObjectShake    |    3    |  18   |     1      |
+|   ObjectShake    |    4    |  17   |     1      |
+| gesture_token_1  |    1    |  18   |     1      |
+| gesture_token_1  |    2    |  12   |     1      |
+| gesture_token_11 |    1    |  34   |     1      |
+| gesture_token_11 |    2    |  23   |     1      |
+| gesture_token_11 |    3    |  19   |     1      |
+| gesture_token_11 |    4    |   5   |     1      |
+| gesture_token_13 |    1    |  70   |     1      |
+| gesture_token_13 |    2    |  28   |     1      |
+| gesture_token_15 |    1    |  47   |     1      |
+| gesture_token_15 |    2    |  43   |     0      |
+| gesture_token_15 |    3    |  41   |     1      |
+| gesture_token_15 |    4    |  28   |     1      |
+| gesture_token_15 |    5    |  26   |     1      |
+| gesture_token_15 |    6    |  17   |     1      |
+| gesture_token_16 |    1    |  53   |     0      |
+| gesture_token_16 |    2    |  31   |     1      |
+| gesture_token_16 |    3    |  25   |     1      |
+| gesture_token_19 |    1    |  294  |     1      |
+| gesture_token_19 |    2    |  60   |     1      |
+| gesture_token_19 |    3    |  39   |     1      |
+| gesture_token_19 |    4    |  34   |     0      |
+| gesture_token_19 |    5    |  32   |     1      |
+| gesture_token_19 |    6    |  16   |     1      |
+| gesture_token_2  |    1    |  344  |     1      |
+| gesture_token_2  |    2    |  219  |     1      |
+| gesture_token_2  |    3    |  183  |     1      |
+| gesture_token_2  |    4    |  74   |     1      |
+| gesture_token_2  |    5    |  24   |     0      |
+| gesture_token_2  |    6    |   6   |     1      |
+| gesture_token_20 |    1    |  113  |     0      |
+| gesture_token_20 |    2    |  55   |     1      |
+| gesture_token_20 |    3    |  55   |     0      |
+| gesture_token_20 |    4    |  34   |     0      |
+| gesture_token_20 |    5    |  30   |     0      |
+| gesture_token_20 |    6    |  29   |     1      |
+| gesture_token_24 |    1    |  31   |     1      |
+| gesture_token_24 |    2    |  19   |     1      |
+| gesture_token_3  |    1    |  19   |     0      |
+| gesture_token_3  |    2    |  42   |     1      |
+| gesture_token_3  |    3    |  25   |     1      |
+| gesture_token_3  |    4    |  25   |     1      |
+| gesture_token_32 |    1    |  211  |     1      |
+| gesture_token_32 |    2    |  37   |     1      |
+| gesture_token_36 |    1    |  197  |     1      |
+| gesture_token_36 |    2    |  144  |     1      |
+| gesture_token_36 |    3    |  120  |     1      |
+| gesture_token_36 |    4    |  94   |     1      |
+| gesture_token_36 |    5    |  50   |     1      |
+| gesture_token_36 |    6    |  21   |     1      |
+| gesture_token_36 |    7    |  13   |     0      |
+| gesture_token_37 |    1    |  283  |     1      |
+| gesture_token_37 |    2    |  60   |     1      |
+| gesture_token_38 |    1    |  59   |     0      |
+| gesture_token_38 |    2    |  54   |     1      |
+| gesture_token_38 |    3    |  44   |     1      |
+| gesture_token_38 |    4    |  25   |     1      |
+| gesture_token_39 |    1    |  99   |     1      |
+| gesture_token_39 |    2    |  92   |     0      |
+| gesture_token_39 |    3    |  65   |     1      |
+| gesture_token_39 |    4    |  54   |     1      |
+| gesture_token_39 |    5    |  47   |     1      |
+| gesture_token_39 |    6    |  18   |     1      |
+| gesture_token_39 |    7    |  16   |     1      |
+| gesture_token_40 |    1    |  201  |     1      |
+| gesture_token_40 |    2    |  24   |     1      |
+| gesture_token_40 |    3    |   8   |     1      |
+| gesture_token_41 |    1    |  370  |     1      |
+| gesture_token_41 |    2    |  191  |     1      |
+| gesture_token_41 |    3    |  16   |     1      |
+| gesture_token_44 |    1    |  21   |     1      |
+| gesture_token_44 |    2    |  19   |     1      |
+| gesture_token_44 |    3    |   7   |     1      |
+| gesture_token_45 |    1    |  36   |     1      |
+| gesture_token_45 |    2    |  23   |     1      |
+| gesture_token_45 |    3    |  16   |     0      |
+| gesture_token_51 |    1    |  213  |     1      |
+| gesture_token_51 |    2    |  93   |     1      |
+| gesture_token_51 |    3    |  49   |     1      |
+| gesture_token_51 |    4    |  38   |     1      |
+| gesture_token_51 |    5    |  13   |     1      |
+| gesture_token_51 |    6    |   8   |     1      |
+| gesture_token_52 |    1    |  12   |     1      |
+| gesture_token_52 |    2    |   8   |     1      |
+| gesture_token_52 |    3    |   6   |     1      |
+| gesture_token_53 |    1    |  16   |     1      |
+| gesture_token_53 |    2    |  12   |     1      |
+| gesture_token_53 |    3    |   8   |     1      |
+| gesture_token_54 |    1    |  259  |     1      |
+| gesture_token_54 |    2    |  18   |     1      |
+| gesture_token_58 |    1    |  144  |     0      |
+| gesture_token_58 |    2    |  117  |     0      |
+| gesture_token_58 |    3    |  88   |     1      |
+| gesture_token_58 |    4    |  54   |     1      |
+| gesture_token_58 |    5    |  44   |     0      |
 
 When we look at the table, we see that only 17 out of 115 morphs are
 unspecified. In many cases, those are just ‘all other’ clusters - a
@@ -1140,7 +1140,7 @@ additional.rules <- additional_rules(
 # display table of rules
 additional.rules %>%
   filter(!(probability == 1 & specificity == 1)) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1148,60 +1148,60 @@ additional.rules %>%
   kable_styling(font_size = 10)
 ```
 
-| modifier count.cluster probability specifici                                               | ty nr.rules | gesture_actio | n cluster |     |                  |     |
-|--------------------------------------------------------------------------------------------|:------------|--------------:|-----------|-----|------------------|-----|
-| Body_part_signaller.Body:Laterality.unimanual                                              | 1           |          0.08 | 1         | 2   | gesture_token_36 | 7   |
-| Body_part_signaller.Foot:Laterality.unimanual                                              | 12          |          0.92 | 1         | 2   | gesture_token_36 | 7   |
-| Body_part_contact.Back:Laterality.unimanual                                                | 15          |          0.62 | 1         | 2   | gesture_token_2  | 5   |
-| Body_part_contact.Face_Mouth:Laterality.unimanual                                          | 9           |          0.38 | 1         | 2   | gesture_token_2  | 5   |
-| Body_part_contact.Body:Body_part_signaller.Hand:Laterality.unimanual                       | 26          |          0.28 | 1         | 3   | gesture_token_39 | 2   |
-| Body_part_contact.Face_Mouth:Body_part_signaller.Hand:Laterality.unimanual                 | 17          |          0.18 | 1         | 3   | gesture_token_39 | 2   |
-| Body_part_contact.Fingers_Hand:Body_part_signaller.Hand:Laterality.unimanual               | 10          |          0.11 | 1         | 3   | gesture_token_39 | 2   |
-| Body_part_contact.Head:Body_part_signaller.Hand:Laterality.unimanual                       | 39          |          0.42 | 1         | 3   | gesture_token_39 | 2   |
-| Body_part_contact.Back:Laterality.unimanual                                                | 22          |          0.37 | 1         | 2   | gesture_token_38 | 1   |
-| Body_part_contact.Body:Laterality.unimanual                                                | 17          |          0.29 | 1         | 2   | gesture_token_38 | 1   |
-| Body_part_contact.Face_Mouth:Laterality.unimanual                                          | 9           |          0.15 | 1         | 2   | gesture_token_38 | 1   |
-| Body_part_contact.Fingers_Hand:Laterality.unimanual                                        | 11          |          0.19 | 1         | 2   | gesture_token_38 | 1   |
-| Body_part_contact.Arm:Body_part_signaller.Hand                                             | 38          |          0.26 | 1         | 2   | gesture_token_58 | 1   |
-| Body_part_contact.Face_Mouth:Body_part_signaller.Hand                                      | 26          |          0.18 | 1         | 2   | gesture_token_58 | 1   |
-| Body_part_contact.Fingers_Hand:Body_part_signaller.Hand                                    | 22          |          0.15 | 1         | 2   | gesture_token_58 | 1   |
-| Body_part_contact.Genitals:Body_part_signaller.Hand                                        | 21          |          0.15 | 1         | 2   | gesture_token_58 | 1   |
-| Body_part_contact.Head:Body_part_signaller.Hand                                            | 37          |          0.26 | 1         | 2   | gesture_token_58 | 1   |
-| Body_part_contact.Body:Body_part_signaller.Hand                                            | 42          |          0.95 | 1         | 2   | gesture_token_58 | 5   |
-| Body_part_contact.Body:Body_part_signaller.Other                                           | 2           |          0.05 | 1         | 2   | gesture_token_58 | 5   |
-| Body_part_contact.Arm:Laterality.unimanual                                                 | 15          |          0.28 | 1         | 2   | gesture_token_16 | 1   |
-| Body_part_contact.Back:Laterality.unimanual                                                | 8           |          0.15 | 1         | 2   | gesture_token_16 | 1   |
-| Body_part_contact.Body:Laterality.unimanual                                                | 7           |          0.13 | 1         | 2   | gesture_token_16 | 1   |
-| Body_part_contact.Face_Mouth:Laterality.unimanual                                          | 6           |          0.11 | 1         | 2   | gesture_token_16 | 1   |
-| Body_part_contact.Fingers_Hand:Laterality.unimanual                                        | 11          |          0.21 | 1         | 2   | gesture_token_16 | 1   |
-| Body_part_contact.Head:Laterality.unimanual                                                | 6           |          0.11 | 1         | 2   | gesture_token_16 | 1   |
-| Body_part_contact.Face_Mouth:Laterality.unimanual                                          | 10          |          0.23 | 1         | 2   | gesture_token_15 | 2   |
-| Body_part_contact.Fingers_Hand:Laterality.unimanual                                        | 16          |          0.37 | 1         | 2   | gesture_token_15 | 2   |
-| Body_part_contact.Head:Laterality.unimanual                                                | 17          |          0.40 | 1         | 2   | gesture_token_15 | 2   |
-| Body_part_signaller.Fingers:Laterality.unimanual:Repetition.no                             | 22          |          0.73 | 1         | 3   | gesture_token_20 | 5   |
-| Body_part_signaller.Foot:Laterality.unimanual:Repetition.no                                | 8           |          0.27 | 1         | 3   | gesture_token_20 | 5   |
-| Body_part_contact.Arm:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no          | 18          |          0.16 | 1         | 4   | gesture_token_20 | 1   |
-| Body_part_contact.Body:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no         | 23          |          0.20 | 1         | 4   | gesture_token_20 | 1   |
-| Body_part_contact.Face_Mouth:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no   | 5           |          0.04 | 1         | 4   | gesture_token_20 | 1   |
-| Body_part_contact.Fingers_Hand:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no | 13          |          0.12 | 1         | 4   | gesture_token_20 | 1   |
-| Body_part_contact.Genitals:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no     | 2           |          0.02 | 1         | 4   | gesture_token_20 | 1   |
-| Body_part_contact.Head:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no         | 35          |          0.31 | 1         | 4   | gesture_token_20 | 1   |
-| Body_part_contact.Leg:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no          | 17          |          0.15 | 1         | 4   | gesture_token_20 | 1   |
-| Body_part_contact.Back:Body_part_signaller.Hand:Laterality.Alternating:Repetition.no       | 3           |          0.05 | 1         | 4   | gesture_token_20 | 3   |
-| Body_part_contact.Back:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no         | 52          |          0.95 | 1         | 4   | gesture_token_20 | 3   |
-| Laterality.Alternating:Repetition.yes                                                      | 19          |          0.56 | 1         | 2   | gesture_token_20 | 4   |
-| Laterality.Both:Repetition.yes                                                             | 15          |          0.44 | 1         | 2   | gesture_token_20 | 4   |
-| Body_part_contact.Face_Mouth                                                               | 11          |          0.17 | 1         | 1   | gesture_token_3  | 1   |
-| Body_part_contact.Fingers_Hand                                                             | 14          |          0.22 | 1         | 1   | gesture_token_3  | 1   |
-| Body_part_contact.Head                                                                     | 19          |          0.29 | 1         | 1   | gesture_token_3  | 1   |
-| Body_part_contact.Leg                                                                      | 15          |          0.23 | 1         | 1   | gesture_token_3  | 1   |
-| Body_part_contact.None                                                                     | 6           |          0.09 | 1         | 1   | gesture_token_3  | 1   |
-| Body_part_signaller.Hand:Laterality.Alternating:Repetition.yes                             | 5           |          0.04 | 1         | 3   | ObjectShake      | 2   |
-| Body_part_signaller.Hand:Laterality.Both:Repetition.yes                                    | 130         |          0.96 | 1         | 3   | ObjectShake      | 2   |
-| Laterality.Alternating                                                                     | 11          |          0.69 | 1         | 1   | gesture_token_45 | 3   |
-| Laterality.Both                                                                            | 5           |          0.31 | 1         | 1   | gesture_token_45 | 3   |
-| Body_part_contact.Other:Laterality.Both                                                    | 2           |          0.33 | 1         | 2   | gesture_token_52 | 3   |
-| Body_part_contact.Other:Laterality.unimanual                                               | 4           |          0.67 | 1         | 2   | gesture_token_52 | 3   |
+|                                          modifier                                          | count.cluster | probability | specificity | nr.rules |  gesture_action  | cluster |
+|:------------------------------------------------------------------------------------------:|:-------------:|:-----------:|:-----------:|:--------:|:----------------:|:-------:|
+|                       Body_part_signaller.Body:Laterality.unimanual                        |       1       |    0.08     |      1      |    2     | gesture_token_36 |    7    |
+|                       Body_part_signaller.Foot:Laterality.unimanual                        |      12       |    0.92     |      1      |    2     | gesture_token_36 |    7    |
+|                        Body_part_contact.Back:Laterality.unimanual                         |      15       |    0.62     |      1      |    2     | gesture_token_2  |    5    |
+|                     Body_part_contact.Face_Mouth:Laterality.unimanual                      |       9       |    0.38     |      1      |    2     | gesture_token_2  |    5    |
+|            Body_part_contact.Body:Body_part_signaller.Hand:Laterality.unimanual            |      26       |    0.28     |      1      |    3     | gesture_token_39 |    2    |
+|         Body_part_contact.Face_Mouth:Body_part_signaller.Hand:Laterality.unimanual         |      17       |    0.18     |      1      |    3     | gesture_token_39 |    2    |
+|        Body_part_contact.Fingers_Hand:Body_part_signaller.Hand:Laterality.unimanual        |      10       |    0.11     |      1      |    3     | gesture_token_39 |    2    |
+|            Body_part_contact.Head:Body_part_signaller.Hand:Laterality.unimanual            |      39       |    0.42     |      1      |    3     | gesture_token_39 |    2    |
+|                        Body_part_contact.Back:Laterality.unimanual                         |      22       |    0.37     |      1      |    2     | gesture_token_38 |    1    |
+|                        Body_part_contact.Body:Laterality.unimanual                         |      17       |    0.29     |      1      |    2     | gesture_token_38 |    1    |
+|                     Body_part_contact.Face_Mouth:Laterality.unimanual                      |       9       |    0.15     |      1      |    2     | gesture_token_38 |    1    |
+|                    Body_part_contact.Fingers_Hand:Laterality.unimanual                     |      11       |    0.19     |      1      |    2     | gesture_token_38 |    1    |
+|                       Body_part_contact.Arm:Body_part_signaller.Hand                       |      38       |    0.26     |      1      |    2     | gesture_token_58 |    1    |
+|                   Body_part_contact.Face_Mouth:Body_part_signaller.Hand                    |      26       |    0.18     |      1      |    2     | gesture_token_58 |    1    |
+|                  Body_part_contact.Fingers_Hand:Body_part_signaller.Hand                   |      22       |    0.15     |      1      |    2     | gesture_token_58 |    1    |
+|                    Body_part_contact.Genitals:Body_part_signaller.Hand                     |      21       |    0.15     |      1      |    2     | gesture_token_58 |    1    |
+|                      Body_part_contact.Head:Body_part_signaller.Hand                       |      37       |    0.26     |      1      |    2     | gesture_token_58 |    1    |
+|                      Body_part_contact.Body:Body_part_signaller.Hand                       |      42       |    0.95     |      1      |    2     | gesture_token_58 |    5    |
+|                      Body_part_contact.Body:Body_part_signaller.Other                      |       2       |    0.05     |      1      |    2     | gesture_token_58 |    5    |
+|                         Body_part_contact.Arm:Laterality.unimanual                         |      15       |    0.28     |      1      |    2     | gesture_token_16 |    1    |
+|                        Body_part_contact.Back:Laterality.unimanual                         |       8       |    0.15     |      1      |    2     | gesture_token_16 |    1    |
+|                        Body_part_contact.Body:Laterality.unimanual                         |       7       |    0.13     |      1      |    2     | gesture_token_16 |    1    |
+|                     Body_part_contact.Face_Mouth:Laterality.unimanual                      |       6       |    0.11     |      1      |    2     | gesture_token_16 |    1    |
+|                    Body_part_contact.Fingers_Hand:Laterality.unimanual                     |      11       |    0.21     |      1      |    2     | gesture_token_16 |    1    |
+|                        Body_part_contact.Head:Laterality.unimanual                         |       6       |    0.11     |      1      |    2     | gesture_token_16 |    1    |
+|                     Body_part_contact.Face_Mouth:Laterality.unimanual                      |      10       |    0.23     |      1      |    2     | gesture_token_15 |    2    |
+|                    Body_part_contact.Fingers_Hand:Laterality.unimanual                     |      16       |    0.37     |      1      |    2     | gesture_token_15 |    2    |
+|                        Body_part_contact.Head:Laterality.unimanual                         |      17       |    0.40     |      1      |    2     | gesture_token_15 |    2    |
+|               Body_part_signaller.Fingers:Laterality.unimanual:Repetition.no               |      22       |    0.73     |      1      |    3     | gesture_token_20 |    5    |
+|                Body_part_signaller.Foot:Laterality.unimanual:Repetition.no                 |       8       |    0.27     |      1      |    3     | gesture_token_20 |    5    |
+|     Body_part_contact.Arm:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no      |      18       |    0.16     |      1      |    4     | gesture_token_20 |    1    |
+|     Body_part_contact.Body:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no     |      23       |    0.20     |      1      |    4     | gesture_token_20 |    1    |
+|  Body_part_contact.Face_Mouth:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no  |       5       |    0.04     |      1      |    4     | gesture_token_20 |    1    |
+| Body_part_contact.Fingers_Hand:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no |      13       |    0.12     |      1      |    4     | gesture_token_20 |    1    |
+|   Body_part_contact.Genitals:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no   |       2       |    0.02     |      1      |    4     | gesture_token_20 |    1    |
+|     Body_part_contact.Head:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no     |      35       |    0.31     |      1      |    4     | gesture_token_20 |    1    |
+|     Body_part_contact.Leg:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no      |      17       |    0.15     |      1      |    4     | gesture_token_20 |    1    |
+|    Body_part_contact.Back:Body_part_signaller.Hand:Laterality.Alternating:Repetition.no    |       3       |    0.05     |      1      |    4     | gesture_token_20 |    3    |
+|     Body_part_contact.Back:Body_part_signaller.Hand:Laterality.unimanual:Repetition.no     |      52       |    0.95     |      1      |    4     | gesture_token_20 |    3    |
+|                           Laterality.Alternating:Repetition.yes                            |      19       |    0.56     |      1      |    2     | gesture_token_20 |    4    |
+|                               Laterality.Both:Repetition.yes                               |      15       |    0.44     |      1      |    2     | gesture_token_20 |    4    |
+|                                Body_part_contact.Face_Mouth                                |      11       |    0.17     |      1      |    1     | gesture_token_3  |    1    |
+|                               Body_part_contact.Fingers_Hand                               |      14       |    0.22     |      1      |    1     | gesture_token_3  |    1    |
+|                                   Body_part_contact.Head                                   |      19       |    0.29     |      1      |    1     | gesture_token_3  |    1    |
+|                                   Body_part_contact.Leg                                    |      15       |    0.23     |      1      |    1     | gesture_token_3  |    1    |
+|                                   Body_part_contact.None                                   |       6       |    0.09     |      1      |    1     | gesture_token_3  |    1    |
+|               Body_part_signaller.Hand:Laterality.Alternating:Repetition.yes               |       5       |    0.04     |      1      |    3     |   ObjectShake    |    2    |
+|                  Body_part_signaller.Hand:Laterality.Both:Repetition.yes                   |      130      |    0.96     |      1      |    3     |   ObjectShake    |    2    |
+|                                   Laterality.Alternating                                   |      11       |    0.69     |      1      |    1     | gesture_token_45 |    3    |
+|                                      Laterality.Both                                       |       5       |    0.31     |      1      |    1     | gesture_token_45 |    3    |
+|                          Body_part_contact.Other:Laterality.Both                           |       2       |    0.33     |      1      |    2     | gesture_token_52 |    3    |
+|                        Body_part_contact.Other:Laterality.unimanual                        |       4       |    0.67     |      1      |    2     | gesture_token_52 |    3    |
 
 There are some additional rules in this - currently, 15 additional
 morphs can be specified this way, usually because there are some rare
@@ -1423,7 +1423,7 @@ morph_rules$nr.goals <-
 
 ``` r
 morph_rules %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1431,123 +1431,123 @@ morph_rules %>%
   kable_styling(font_size = 10)
 ```
 
-| morph_name ges     | ture_action clus | ter coun | t Body | \_part_signaller |                                   Body_part_contact Repe | tition |        Laterality rule | \_complexity to_c | heck |                                                           groups nr.g | roups |                goals nr.g | oals |
-|--------------------|------------------|----------|--------|:-----------------|---------------------------------------------------------:|:-------|-----------------------:|-------------------|:-----|----------------------------------------------------------------------:|:------|--------------------------:|:-----|
-| ObjectShake.1      | ObjectShake      | 1        | 402    | Hand             |                                                       NA | yes    |              unimanual | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       goal_7,Play,goal_18 | 14   |
-| ObjectShake.2      | ObjectShake      | 2        | 135    | Hand             |                                                       NA | yes    |      Alternating\|Both | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       goal_7,Play,goal_18 | 10   |
-| ObjectShake.3      | ObjectShake      | 3        | 18     | Foot             |                                                       NA | yes    |                     NA | 2                 | 0    |                                           Social_unit_1,Social_unit_4 | 2     |       Play,goal_3,Unknown | 5    |
-| ObjectShake.4      | ObjectShake      | 4        | 17     | NA               |                                                       NA | no     |                     NA | 1                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |       Play,goal_18,goal_7 | 5    |
-| gesture_token_1.1  | gesture_token_1  | 1        | 18     | Arm              |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |   goal_18,Unknown,goal_12 | 10   |
-| gesture_token_1.2  | gesture_token_1  | 2        | 12     | Hand             |                                                       NA | NA     |                     NA | 1                 | 0    |                             Social_unit_2,Social_unit_4,Social_unit_5 | 3     |   goal_13,goal_17,goal_10 | 8    |
-| gesture_token_10.1 | gesture_token_10 | 1        | 23     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |       goal_3,Play,goal_18 | 6    |
-| gesture_token_11.1 | gesture_token_11 | 1        | 34     | NA               |                                                     Body | NA     |                   Both | 2                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |       goal_1,Play,Unknown | 5    |
-| gesture_token_11.2 | gesture_token_11 | 2        | 23     | NA               |                                                     Body | NA     |              unimanual | 2                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |    goal_1,Unknown,goal_18 | 9    |
-| gesture_token_11.3 | gesture_token_11 | 3        | 19     | NA               |                                                     Back | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |     goal_1,goal_10,goal_2 | 6    |
-| gesture_token_11.4 | gesture_token_11 | 4        | 5      | NA               |                                                     Back | NA     |                   Both | 2                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |            goal_1,Unknown | 2    |
-| gesture_token_13.1 | gesture_token_13 | 1        | 70     | Arm              |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |   goal_12,Unknown,goal_21 | 7    |
-| gesture_token_13.2 | gesture_token_13 | 2        | 28     | Hand             |                                                       NA | NA     |                     NA | 1                 | 0    |                                           Social_unit_1,Social_unit_4 | 2     |    goal_12,goal_21,goal_1 | 3    |
-| gesture_token_15.1 | gesture_token_15 | 1        | 47     | NA               |                                                      Leg | NA     |              unimanual | 2                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     | Play,goal_21,PlayContinue | 9    |
-| gesture_token_15.2 | gesture_token_15 | 2        | 43     | NA               |                           Face_Mouth\|Fingers_Hand\|Head | NA     |              unimanual | 2                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     | Play,PlayContinue,goal_21 | 8    |
-| gesture_token_15.3 | gesture_token_15 | 3        | 41     | NA               |                                                     Back | NA     |              unimanual | 2                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     | Play,PlayContinue,goal_21 | 6    |
-| gesture_token_15.4 | gesture_token_15 | 4        | 28     | NA               |                                                      Arm | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |        Play,goal_5,goal_1 | 5    |
-| gesture_token_15.5 | gesture_token_15 | 5        | 26     | NA               |                                                     Body | NA     |              unimanual | 2                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |  Play,PlayContinue,goal_1 | 6    |
-| gesture_token_15.6 | gesture_token_15 | 6        | 17     | NA               |                                                       NA | NA     |                   Both | 1                 | 0    |                                                         Social_unit_4 | 1     |         Play,PlayContinue | 2    |
-| gesture_token_16.1 | gesture_token_16 | 1        | 53     | NA               |          Arm\|Back\|Body\|Face_Mouth\|Fingers_Hand\|Head | NA     |              unimanual | 2                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     |       Play,goal_8,goal_21 | 12   |
-| gesture_token_16.2 | gesture_token_16 | 2        | 31     | NA               |                                                      Leg | NA     |              unimanual | 2                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |       Play,goal_1,goal_21 | 5    |
-| gesture_token_16.3 | gesture_token_16 | 3        | 25     | NA               |                                                       NA | NA     |                   Both | 1                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |  Play,PlayContinue,goal_5 | 3    |
-| gesture_token_17.1 | gesture_token_17 | 1        | 38     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     | Play,PlayContinue,goal_18 | 4    |
-| gesture_token_19.1 | gesture_token_19 | 1        | 294    | Hand             |                                                       NA | no     |              unimanual | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |  Play,goal_7,PlayContinue | 14   |
-| gesture_token_19.2 | gesture_token_19 | 2        | 60     | Hand             |                                                       NA | no     |                   Both | 3                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |      Play,goal_12,Unknown | 9    |
-| gesture_token_19.3 | gesture_token_19 | 3        | 39     | Foot             |                                                       NA | no     |                     NA | 2                 | 0    |                             Social_unit_2,Social_unit_4,Social_unit_5 | 3     |  Play,goal_7,PlayContinue | 9    |
-| gesture_token_19.4 | gesture_token_19 | 4        | 34     | NA               |                                                       NA | NA     |                     NA | 0                 | 1    |                             Social_unit_3,Social_unit_4,Social_unit_5 | 3     |      Play,Unknown,goal_18 | 10   |
-| gesture_token_19.5 | gesture_token_19 | 5        | 32     | Hand             |                                                       NA | yes    |              unimanual | 3                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |       goal_7,Play,Unknown | 7    |
-| gesture_token_19.6 | gesture_token_19 | 6        | 16     | Foot             |                                                       NA | yes    |                     NA | 2                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     | Play,goal_12,PlayContinue | 6    |
-| gesture_token_2.1  | gesture_token_2  | 1        | 344    | NA               |                                                     Body | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |    goal_10,goal_6,goal_11 | 17   |
-| gesture_token_2.2  | gesture_token_2  | 2        | 219    | NA               |                                                      Arm | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |    goal_10,goal_6,goal_25 | 11   |
-| gesture_token_2.3  | gesture_token_2  | 3        | 183    | NA               |                                                     Head | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |    goal_10,goal_6,goal_17 | 13   |
-| gesture_token_2.4  | gesture_token_2  | 4        | 74     | NA               |                                                      Leg | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |    goal_10,goal_6,goal_25 | 12   |
-| gesture_token_2.5  | gesture_token_2  | 5        | 24     | NA               |                                         Back\|Face_Mouth | NA     |              unimanual | 2                 | 0    |               Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |    goal_10,goal_17,goal_6 | 5    |
-| gesture_token_2.6  | gesture_token_2  | 6        | 6      | NA               |                                                       NA | NA     |                   Both | 1                 | 0    |                                           Social_unit_3,Social_unit_5 | 2     |    goal_10,goal_1,goal_25 | 3    |
-| gesture_token_20.1 | gesture_token_20 | 1        | 113    | Hand             | Arm\|Body\|Face_Mouth\|Fingers_Hand\|Genitals\|Head\|Leg | no     |              unimanual | 4                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     | Play,goal_21,PlayContinue | 8    |
-| gesture_token_20.2 | gesture_token_20 | 2        | 55     | NA               |                                                       NA | yes    |              unimanual | 2                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |       Play,goal_1,goal_19 | 11   |
-| gesture_token_20.3 | gesture_token_20 | 3        | 55     | Hand             |                                                     Back | no     | Alternating\|unimanual | 4                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     | Play,PlayContinue,goal_12 | 7    |
-| gesture_token_20.4 | gesture_token_20 | 4        | 34     | NA               |                                                       NA | yes    |      Alternating\|Both | 2                 | 0    |                                           Social_unit_1,Social_unit_4 | 2     |      Play,goal_12,goal_18 | 5    |
-| gesture_token_20.5 | gesture_token_20 | 5        | 30     | Fingers\|Foot    |                                                       NA | no     |              unimanual | 3                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     | Play,goal_21,PlayContinue | 7    |
-| gesture_token_20.6 | gesture_token_20 | 6        | 29     | NA               |                                                       NA | no     |                   Both | 2                 | 0    |                                                         Social_unit_4 | 1     | Play,PlayContinue,goal_21 | 4    |
-| gesture_token_21.1 | gesture_token_21 | 1        | 38     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                             Social_unit_1,Social_unit_2,Social_unit_4 | 3     |       goal_7,Play,Unknown | 8    |
-| gesture_token_22.1 | gesture_token_22 | 1        | 10     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                                                         Social_unit_4 | 1     | Play,PlayContinue,goal_12 | 3    |
-| gesture_token_24.1 | gesture_token_24 | 1        | 31     | Hand             |                                                       NA | NA     |              unimanual | 1                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     | goal_18,Play,PlayContinue | 6    |
-| gesture_token_24.2 | gesture_token_24 | 2        | 19     | Face_Mouth       |                                                       NA | NA     |                     NV | 1                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |              goal_18,Play | 2    |
-| gesture_token_26.1 | gesture_token_26 | 1        | 49     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |      Play,Unknown,goal_12 | 6    |
-| gesture_token_29.1 | gesture_token_29 | 1        | 13     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     |      goal_12,Play,goal_21 | 5    |
-| gesture_token_3.1  | gesture_token_3  | 1        | 19     | NA               |                Face_Mouth\|Fingers_Hand\|Head\|Leg\|None | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       Play,goal_1,goal_20 | 13   |
-| gesture_token_3.2  | gesture_token_3  | 2        | 42     | NA               |                                                     Back | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       Play,goal_1,goal_20 | 9    |
-| gesture_token_3.3  | gesture_token_3  | 3        | 25     | NA               |                                                     Body | NA     |                     NA | 1                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |       Play,goal_1,goal_20 | 10   |
-| gesture_token_3.4  | gesture_token_3  | 4        | 25     | NA               |                                                      Arm | NA     |                     NA | 1                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |       goal_1,Play,goal_20 | 8    |
-| gesture_token_31.1 | gesture_token_31 | 1        | 31     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                             Social_unit_3,Social_unit_4,Social_unit_5 | 3     | Play,PlayContinue,Unknown | 4    |
-| gesture_token_32.1 | gesture_token_32 | 1        | 211    | NA               |                                                       NA | NA     |              unimanual | 1                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |       Play,goal_7,goal_18 | 13   |
-| gesture_token_32.2 | gesture_token_32 | 2        | 37     | NA               |                                                       NA | NA     |                   Both | 1                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |       Play,goal_7,goal_18 | 8    |
-| gesture_token_35.1 | gesture_token_35 | 1        | 12     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                                                         Social_unit_4 | 1     | Play,PlayContinue,goal_13 | 4    |
-| gesture_token_36.1 | gesture_token_36 | 1        | 197    | Back             |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |     goal_10,goal_6,goal_4 | 7    |
-| gesture_token_36.2 | gesture_token_36 | 2        | 144    | Arm              |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |     goal_10,goal_6,goal_4 | 8    |
-| gesture_token_36.3 | gesture_token_36 | 3        | 120    | Body             |                                                       NA | NA     |                     NV | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |     goal_10,goal_6,goal_4 | 3    |
-| gesture_token_36.4 | gesture_token_36 | 4        | 94     | Leg              |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |     goal_10,goal_6,goal_4 | 3    |
-| gesture_token_36.5 | gesture_token_36 | 5        | 50     | Bottom           |                                                       NA | NA     |                     NA | 1                 | 0    |               Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |    goal_10,goal_6,goal_20 | 7    |
-| gesture_token_36.6 | gesture_token_36 | 6        | 21     | Head             |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |            goal_10,goal_6 | 2    |
-| gesture_token_36.7 | gesture_token_36 | 7        | 13     | Body\|Foot       |                                                       NA | NA     |              unimanual | 2                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |    goal_4,Unknown,goal_10 | 5    |
-| gesture_token_37.1 | gesture_token_37 | 1        | 283    | Genitals         |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |   goal_18,goal_19,goal_20 | 13   |
-| gesture_token_37.2 | gesture_token_37 | 2        | 60     | Bottom           |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |    goal_20,goal_19,goal_1 | 12   |
-| gesture_token_38.1 | gesture_token_38 | 1        | 59     | NA               |                     Back\|Body\|Face_Mouth\|Fingers_Hand | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       goal_10,Play,goal_8 | 12   |
-| gesture_token_38.2 | gesture_token_38 | 2        | 54     | NA               |                                                      Leg | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     | Play,goal_17,PlayContinue | 10   |
-| gesture_token_38.3 | gesture_token_38 | 3        | 44     | NA               |                                                      Arm | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       Play,goal_4,goal_17 | 12   |
-| gesture_token_38.4 | gesture_token_38 | 4        | 25     | NA               |                                                       NA | NA     |                   Both | 1                 | 0    |                                                         Social_unit_4 | 1     |       Play,goal_25,goal_5 | 4    |
-| gesture_token_39.1 | gesture_token_39 | 1        | 99     | Hand             |                                                     Back | NA     |              unimanual | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |    goal_17,goal_4,goal_24 | 14   |
-| gesture_token_39.2 | gesture_token_39 | 2        | 92     | Hand             |                     Body\|Face_Mouth\|Fingers_Hand\|Head | NA     |              unimanual | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |      goal_17,goal_21,Play | 13   |
-| gesture_token_39.3 | gesture_token_39 | 3        | 65     | Hand             |                                                      Leg | NA     |              unimanual | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |   goal_17,goal_10,goal_12 | 7    |
-| gesture_token_39.4 | gesture_token_39 | 4        | 54     | Fingers          |                                                       NA | NA     |                     NA | 1                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     |    goal_17,goal_21,goal_4 | 9    |
-| gesture_token_39.5 | gesture_token_39 | 5        | 47     | Hand             |                                                      Arm | NA     |              unimanual | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |   goal_17,goal_23,goal_18 | 10   |
-| gesture_token_39.6 | gesture_token_39 | 6        | 18     | NA               |                                                       NA | NA     |                   Both | 1                 | 0    |                             Social_unit_1,Social_unit_3,Social_unit_4 | 3     |      goal_25,goal_17,Play | 6    |
-| gesture_token_39.7 | gesture_token_39 | 7        | 16     | Foot             |                                                       NA | NA     |                     NA | 1                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |      goal_17,goal_10,Play | 7    |
-| gesture_token_4.1  | gesture_token_4  | 1        | 14     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     |    goal_18,Unknown,goal_1 | 8    |
-| gesture_token_40.1 | gesture_token_40 | 1        | 201    | Arm              |                                                       NA | NA     |              unimanual | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |    goal_11,goal_10,goal_9 | 21   |
-| gesture_token_40.2 | gesture_token_40 | 2        | 24     | Hand             |                                                       NA | NA     |                     NA | 1                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |   goal_10,goal_11,goal_18 | 10   |
-| gesture_token_40.3 | gesture_token_40 | 3        | 8      | NA               |                                                       NA | NA     |                   Both | 1                 | 0    |                                           Social_unit_3,Social_unit_4 | 2     |       goal_9,Play,goal_10 | 4    |
-| gesture_token_41.1 | gesture_token_41 | 1        | 370    | Arm              |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       goal_8,Play,goal_20 | 22   |
-| gesture_token_41.2 | gesture_token_41 | 2        | 191    | Hand             |                                                       NA | NA     |                     NA | 1                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |        goal_8,Play,goal_1 | 13   |
-| gesture_token_41.3 | gesture_token_41 | 3        | 16     | Leg              |                                                       NA | NA     |                     NA | 1                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |       goal_1,Play,Unknown | 5    |
-| gesture_token_42.1 | gesture_token_42 | 1        | 36     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |   goal_18,Unknown,goal_12 | 8    |
-| gesture_token_43.1 | gesture_token_43 | 1        | 34     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     | Play,PlayContinue,goal_12 | 5    |
-| gesture_token_44.1 | gesture_token_44 | 1        | 21     | NA               |                                                       NA | no     |                     NA | 1                 | 0    |                                           Social_unit_1,Social_unit_4 | 2     |    goal_7,Unknown,goal_19 | 6    |
-| gesture_token_44.2 | gesture_token_44 | 2        | 19     | Genitals         |                                                       NA | yes    |                     NA | 2                 | 0    |                                           Social_unit_1,Social_unit_3 | 2     |   goal_19,goal_10,goal_11 | 4    |
-| gesture_token_44.3 | gesture_token_44 | 3        | 7      | Bottom           |                                                       NA | yes    |                     NA | 2                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |    goal_1,goal_19,goal_22 | 5    |
-| gesture_token_45.1 | gesture_token_45 | 1        | 36     | NA               |                                                       NA | NA     |              unimanual | 1                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     | Play,PlayContinue,Unknown | 8    |
-| gesture_token_45.2 | gesture_token_45 | 2        | 23     | Head             |                                                       NA | NA     |                     NV | 1                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |       Play,goal_18,goal_7 | 6    |
-| gesture_token_45.3 | gesture_token_45 | 3        | 16     | NA               |                                                       NA | NA     |      Alternating\|Both | 1                 | 0    |                                                         Social_unit_4 | 1     |        Play,goal_7,goal_8 | 4    |
-| gesture_token_48.1 | gesture_token_48 | 1        | 23     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                                                         Social_unit_4 | 1     |      goal_21,Play,Unknown | 4    |
-| gesture_token_49.1 | gesture_token_49 | 1        | 42     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                                           Social_unit_1,Social_unit_4 | 2     |      Play,goal_21,Unknown | 4    |
-| gesture_token_5.1  | gesture_token_5  | 1        | 12     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                             Social_unit_1,Social_unit_2,Social_unit_4 | 3     |              Play,goal_18 | 2    |
-| gesture_token_51.1 | gesture_token_51 | 1        | 213    | Foot             |                                                       NA | no     |              unimanual | 3                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       Play,goal_7,Unknown | 13   |
-| gesture_token_51.2 | gesture_token_51 | 2        | 93     | NA               |                                                       NA | yes    |            Alternating | 2                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     | Play,Unknown,PlayContinue | 9    |
-| gesture_token_51.3 | gesture_token_51 | 3        | 49     | NA               |                                                       NA | yes    |              unimanual | 2                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     |      Play,goal_12,Unknown | 9    |
-| gesture_token_51.4 | gesture_token_51 | 4        | 38     | Foot             |                                                       NA | NA     |                   Both | 2                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |       Play,Unknown,goal_7 | 6    |
-| gesture_token_51.5 | gesture_token_51 | 5        | 13     | NA               |                                                       NA | no     |            Alternating | 2                 | 0    |                                           Social_unit_4,Social_unit_5 | 2     |       Play,goal_18,goal_3 | 7    |
-| gesture_token_51.6 | gesture_token_51 | 6        | 8      | Hand             |                                                       NA | NA     |                     NA | 1                 | 0    |                                                         Social_unit_4 | 1     |      Play,goal_13,goal_20 | 3    |
-| gesture_token_52.1 | gesture_token_52 | 1        | 12     | NA               |                                                     Back | no     |                     NA | 2                 | 0    |                                           Social_unit_3,Social_unit_4 | 2     |  Play,PlayContinue,goal_3 | 3    |
-| gesture_token_52.2 | gesture_token_52 | 2        | 8      | NA               |                                                       NA | yes    |                     NA | 1                 | 0    |                                                         Social_unit_4 | 1     |                      Play | 1    |
-| gesture_token_52.3 | gesture_token_52 | 3        | 6      | NA               |                                                    Other | no     |                     NA | 2                 | 0    |                                                         Social_unit_4 | 1     |         Play,PlayContinue | 2    |
-| gesture_token_53.1 | gesture_token_53 | 1        | 16     | Hand             |                                                       NA | no     |                     NA | 2                 | 0    |               Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5 | 4     |       Play,goal_8,goal_18 | 9    |
-| gesture_token_53.2 | gesture_token_53 | 2        | 12     | NA               |                                                       NA | yes    |                     NA | 1                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |     goal_8,goal_13,goal_1 | 6    |
-| gesture_token_53.3 | gesture_token_53 | 3        | 8      | Fingers          |                                                       NA | no     |                     NA | 2                 | 0    |                             Social_unit_2,Social_unit_4,Social_unit_5 | 3     |    goal_8,goal_13,goal_20 | 5    |
-| gesture_token_54.1 | gesture_token_54 | 1        | 259    | Arm              |                                                       NA | NA     |                     NA | 1                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |  Play,PlayContinue,goal_7 | 14   |
-| gesture_token_54.2 | gesture_token_54 | 2        | 18     | Leg              |                                                       NA | NA     |                     NA | 1                 | 0    |                                           Social_unit_2,Social_unit_4 | 2     |  Play,PlayContinue,goal_1 | 5    |
-| gesture_token_55.1 | gesture_token_55 | 1        | 20     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |       goal_7,Play,Unknown | 5    |
-| gesture_token_58.1 | gesture_token_58 | 1        | 144    | Hand             |            Arm\|Face_Mouth\|Fingers_Hand\|Genitals\|Head | NA     |                     NA | 2                 | 0    |               Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5 | 4     |       Play,goal_8,goal_21 | 21   |
-| gesture_token_58.2 | gesture_token_58 | 2        | 117    | NA               |                                                       NA | NA     |                     NA | 0                 | 1    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |        Play,goal_1,goal_8 | 20   |
-| gesture_token_58.3 | gesture_token_58 | 3        | 88     | Hand             |                                                     Back | NA     |                     NA | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       Play,Unknown,goal_1 | 17   |
-| gesture_token_58.4 | gesture_token_58 | 4        | 54     | Hand             |                                                      Leg | NA     |                     NA | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |       goal_1,Play,goal_20 | 12   |
-| gesture_token_58.5 | gesture_token_58 | 5        | 44     | Hand\|Other      |                                                     Body | NA     |                     NA | 2                 | 0    | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 5     |      Play,goal_20,Unknown | 14   |
-| gesture_token_8.1  | gesture_token_8  | 1        | 241    | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |               Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 | 4     | Play,PlayContinue,Unknown | 4    |
-| gesture_token_9.1  | gesture_token_9  | 1        | 40     | NA               |                                                       NA | NA     |                     NA | 0                 | 0    |                             Social_unit_1,Social_unit_4,Social_unit_5 | 3     |  Play,PlayContinue,goal_8 | 3    |
+|     morph_name     |  gesture_action  | cluster | count | Body_part_signaller |                    Body_part_contact                     | Repetition |       Laterality       | rule_complexity | to_check |                                groups                                 | nr.groups |           goals           | nr.goals |
+|:------------------:|:----------------:|:-------:|:-----:|:-------------------:|:--------------------------------------------------------:|:----------:|:----------------------:|:---------------:|:--------:|:---------------------------------------------------------------------:|:---------:|:-------------------------:|:--------:|
+|   ObjectShake.1    |   ObjectShake    |    1    |  402  |        Hand         |                            NA                            |    yes     |       unimanual        |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    goal_7,Play,goal_18    |    14    |
+|   ObjectShake.2    |   ObjectShake    |    2    |  135  |        Hand         |                            NA                            |    yes     |   Alternating\|Both    |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    goal_7,Play,goal_18    |    10    |
+|   ObjectShake.3    |   ObjectShake    |    3    |  18   |        Foot         |                            NA                            |    yes     |           NA           |        2        |    0     |                      Social_unit_1,Social_unit_4                      |     2     |    Play,goal_3,Unknown    |    5     |
+|   ObjectShake.4    |   ObjectShake    |    4    |  17   |         NA          |                            NA                            |     no     |           NA           |        1        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |    Play,goal_18,goal_7    |    5     |
+| gesture_token_1.1  | gesture_token_1  |    1    |  18   |         Arm         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_18,Unknown,goal_12  |    10    |
+| gesture_token_1.2  | gesture_token_1  |    2    |  12   |        Hand         |                            NA                            |     NA     |           NA           |        1        |    0     |               Social_unit_2,Social_unit_4,Social_unit_5               |     3     |  goal_13,goal_17,goal_10  |    8     |
+| gesture_token_10.1 | gesture_token_10 |    1    |  23   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |    goal_3,Play,goal_18    |    6     |
+| gesture_token_11.1 | gesture_token_11 |    1    |  34   |         NA          |                           Body                           |     NA     |          Both          |        2        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |    goal_1,Play,Unknown    |    5     |
+| gesture_token_11.2 | gesture_token_11 |    2    |  23   |         NA          |                           Body                           |     NA     |       unimanual        |        2        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |  goal_1,Unknown,goal_18   |    9     |
+| gesture_token_11.3 | gesture_token_11 |    3    |  19   |         NA          |                           Back                           |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |   goal_1,goal_10,goal_2   |    6     |
+| gesture_token_11.4 | gesture_token_11 |    4    |   5   |         NA          |                           Back                           |     NA     |          Both          |        2        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |      goal_1,Unknown       |    2     |
+| gesture_token_13.1 | gesture_token_13 |    1    |  70   |         Arm         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_12,Unknown,goal_21  |    7     |
+| gesture_token_13.2 | gesture_token_13 |    2    |  28   |        Hand         |                            NA                            |     NA     |           NA           |        1        |    0     |                      Social_unit_1,Social_unit_4                      |     2     |  goal_12,goal_21,goal_1   |    3     |
+| gesture_token_15.1 | gesture_token_15 |    1    |  47   |         NA          |                           Leg                            |     NA     |       unimanual        |        2        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     | Play,goal_21,PlayContinue |    9     |
+| gesture_token_15.2 | gesture_token_15 |    2    |  43   |         NA          |              Face_Mouth\|Fingers_Hand\|Head              |     NA     |       unimanual        |        2        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     | Play,PlayContinue,goal_21 |    8     |
+| gesture_token_15.3 | gesture_token_15 |    3    |  41   |         NA          |                           Back                           |     NA     |       unimanual        |        2        |    0     |                      Social_unit_4,Social_unit_5                      |     2     | Play,PlayContinue,goal_21 |    6     |
+| gesture_token_15.4 | gesture_token_15 |    4    |  28   |         NA          |                           Arm                            |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    Play,goal_5,goal_1     |    5     |
+| gesture_token_15.5 | gesture_token_15 |    5    |  26   |         NA          |                           Body                           |     NA     |       unimanual        |        2        |    0     |                      Social_unit_4,Social_unit_5                      |     2     | Play,PlayContinue,goal_1  |    6     |
+| gesture_token_15.6 | gesture_token_15 |    6    |  17   |         NA          |                            NA                            |     NA     |          Both          |        1        |    0     |                             Social_unit_4                             |     1     |     Play,PlayContinue     |    2     |
+| gesture_token_16.1 | gesture_token_16 |    1    |  53   |         NA          |     Arm\|Back\|Body\|Face_Mouth\|Fingers_Hand\|Head      |     NA     |       unimanual        |        2        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     |    Play,goal_8,goal_21    |    12    |
+| gesture_token_16.2 | gesture_token_16 |    2    |  31   |         NA          |                           Leg                            |     NA     |       unimanual        |        2        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |    Play,goal_1,goal_21    |    5     |
+| gesture_token_16.3 | gesture_token_16 |    3    |  25   |         NA          |                            NA                            |     NA     |          Both          |        1        |    0     |                      Social_unit_4,Social_unit_5                      |     2     | Play,PlayContinue,goal_5  |    3     |
+| gesture_token_17.1 | gesture_token_17 |    1    |  38   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     | Play,PlayContinue,goal_18 |    4     |
+| gesture_token_19.1 | gesture_token_19 |    1    |  294  |        Hand         |                            NA                            |     no     |       unimanual        |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     | Play,goal_7,PlayContinue  |    14    |
+| gesture_token_19.2 | gesture_token_19 |    2    |  60   |        Hand         |                            NA                            |     no     |          Both          |        3        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |   Play,goal_12,Unknown    |    9     |
+| gesture_token_19.3 | gesture_token_19 |    3    |  39   |        Foot         |                            NA                            |     no     |           NA           |        2        |    0     |               Social_unit_2,Social_unit_4,Social_unit_5               |     3     | Play,goal_7,PlayContinue  |    9     |
+| gesture_token_19.4 | gesture_token_19 |    4    |  34   |         NA          |                            NA                            |     NA     |           NA           |        0        |    1     |               Social_unit_3,Social_unit_4,Social_unit_5               |     3     |   Play,Unknown,goal_18    |    10    |
+| gesture_token_19.5 | gesture_token_19 |    5    |  32   |        Hand         |                            NA                            |    yes     |       unimanual        |        3        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |    goal_7,Play,Unknown    |    7     |
+| gesture_token_19.6 | gesture_token_19 |    6    |  16   |        Foot         |                            NA                            |    yes     |           NA           |        2        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     | Play,goal_12,PlayContinue |    6     |
+| gesture_token_2.1  | gesture_token_2  |    1    |  344  |         NA          |                           Body                           |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_10,goal_6,goal_11   |    17    |
+| gesture_token_2.2  | gesture_token_2  |    2    |  219  |         NA          |                           Arm                            |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_10,goal_6,goal_25   |    11    |
+| gesture_token_2.3  | gesture_token_2  |    3    |  183  |         NA          |                           Head                           |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_10,goal_6,goal_17   |    13    |
+| gesture_token_2.4  | gesture_token_2  |    4    |  74   |         NA          |                           Leg                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_10,goal_6,goal_25   |    12    |
+| gesture_token_2.5  | gesture_token_2  |    5    |  24   |         NA          |                     Back\|Face_Mouth                     |     NA     |       unimanual        |        2        |    0     |        Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |  goal_10,goal_17,goal_6   |    5     |
+| gesture_token_2.6  | gesture_token_2  |    6    |   6   |         NA          |                            NA                            |     NA     |          Both          |        1        |    0     |                      Social_unit_3,Social_unit_5                      |     2     |  goal_10,goal_1,goal_25   |    3     |
+| gesture_token_20.1 | gesture_token_20 |    1    |  113  |        Hand         | Arm\|Body\|Face_Mouth\|Fingers_Hand\|Genitals\|Head\|Leg |     no     |       unimanual        |        4        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     | Play,goal_21,PlayContinue |    8     |
+| gesture_token_20.2 | gesture_token_20 |    2    |  55   |         NA          |                            NA                            |    yes     |       unimanual        |        2        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |    Play,goal_1,goal_19    |    11    |
+| gesture_token_20.3 | gesture_token_20 |    3    |  55   |        Hand         |                           Back                           |     no     | Alternating\|unimanual |        4        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     | Play,PlayContinue,goal_12 |    7     |
+| gesture_token_20.4 | gesture_token_20 |    4    |  34   |         NA          |                            NA                            |    yes     |   Alternating\|Both    |        2        |    0     |                      Social_unit_1,Social_unit_4                      |     2     |   Play,goal_12,goal_18    |    5     |
+| gesture_token_20.5 | gesture_token_20 |    5    |  30   |    Fingers\|Foot    |                            NA                            |     no     |       unimanual        |        3        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     | Play,goal_21,PlayContinue |    7     |
+| gesture_token_20.6 | gesture_token_20 |    6    |  29   |         NA          |                            NA                            |     no     |          Both          |        2        |    0     |                             Social_unit_4                             |     1     | Play,PlayContinue,goal_21 |    4     |
+| gesture_token_21.1 | gesture_token_21 |    1    |  38   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |               Social_unit_1,Social_unit_2,Social_unit_4               |     3     |    goal_7,Play,Unknown    |    8     |
+| gesture_token_22.1 | gesture_token_22 |    1    |  10   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |                             Social_unit_4                             |     1     | Play,PlayContinue,goal_12 |    3     |
+| gesture_token_24.1 | gesture_token_24 |    1    |  31   |        Hand         |                            NA                            |     NA     |       unimanual        |        1        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     | goal_18,Play,PlayContinue |    6     |
+| gesture_token_24.2 | gesture_token_24 |    2    |  19   |     Face_Mouth      |                            NA                            |     NA     |           NV           |        1        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |       goal_18,Play        |    2     |
+| gesture_token_26.1 | gesture_token_26 |    1    |  49   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |   Play,Unknown,goal_12    |    6     |
+| gesture_token_29.1 | gesture_token_29 |    1    |  13   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     |   goal_12,Play,goal_21    |    5     |
+| gesture_token_3.1  | gesture_token_3  |    1    |  19   |         NA          |        Face_Mouth\|Fingers_Hand\|Head\|Leg\|None         |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    Play,goal_1,goal_20    |    13    |
+| gesture_token_3.2  | gesture_token_3  |    2    |  42   |         NA          |                           Back                           |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    Play,goal_1,goal_20    |    9     |
+| gesture_token_3.3  | gesture_token_3  |    3    |  25   |         NA          |                           Body                           |     NA     |           NA           |        1        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |    Play,goal_1,goal_20    |    10    |
+| gesture_token_3.4  | gesture_token_3  |    4    |  25   |         NA          |                           Arm                            |     NA     |           NA           |        1        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |    goal_1,Play,goal_20    |    8     |
+| gesture_token_31.1 | gesture_token_31 |    1    |  31   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |               Social_unit_3,Social_unit_4,Social_unit_5               |     3     | Play,PlayContinue,Unknown |    4     |
+| gesture_token_32.1 | gesture_token_32 |    1    |  211  |         NA          |                            NA                            |     NA     |       unimanual        |        1        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |    Play,goal_7,goal_18    |    13    |
+| gesture_token_32.2 | gesture_token_32 |    2    |  37   |         NA          |                            NA                            |     NA     |          Both          |        1        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |    Play,goal_7,goal_18    |    8     |
+| gesture_token_35.1 | gesture_token_35 |    1    |  12   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |                             Social_unit_4                             |     1     | Play,PlayContinue,goal_13 |    4     |
+| gesture_token_36.1 | gesture_token_36 |    1    |  197  |        Back         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |   goal_10,goal_6,goal_4   |    7     |
+| gesture_token_36.2 | gesture_token_36 |    2    |  144  |         Arm         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |   goal_10,goal_6,goal_4   |    8     |
+| gesture_token_36.3 | gesture_token_36 |    3    |  120  |        Body         |                            NA                            |     NA     |           NV           |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |   goal_10,goal_6,goal_4   |    3     |
+| gesture_token_36.4 | gesture_token_36 |    4    |  94   |         Leg         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |   goal_10,goal_6,goal_4   |    3     |
+| gesture_token_36.5 | gesture_token_36 |    5    |  50   |       Bottom        |                            NA                            |     NA     |           NA           |        1        |    0     |        Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |  goal_10,goal_6,goal_20   |    7     |
+| gesture_token_36.6 | gesture_token_36 |    6    |  21   |        Head         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |      goal_10,goal_6       |    2     |
+| gesture_token_36.7 | gesture_token_36 |    7    |  13   |     Body\|Foot      |                            NA                            |     NA     |       unimanual        |        2        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |  goal_4,Unknown,goal_10   |    5     |
+| gesture_token_37.1 | gesture_token_37 |    1    |  283  |      Genitals       |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_18,goal_19,goal_20  |    13    |
+| gesture_token_37.2 | gesture_token_37 |    2    |  60   |       Bottom        |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_20,goal_19,goal_1   |    12    |
+| gesture_token_38.1 | gesture_token_38 |    1    |  59   |         NA          |           Back\|Body\|Face_Mouth\|Fingers_Hand           |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    goal_10,Play,goal_8    |    12    |
+| gesture_token_38.2 | gesture_token_38 |    2    |  54   |         NA          |                           Leg                            |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     | Play,goal_17,PlayContinue |    10    |
+| gesture_token_38.3 | gesture_token_38 |    3    |  44   |         NA          |                           Arm                            |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    Play,goal_4,goal_17    |    12    |
+| gesture_token_38.4 | gesture_token_38 |    4    |  25   |         NA          |                            NA                            |     NA     |          Both          |        1        |    0     |                             Social_unit_4                             |     1     |    Play,goal_25,goal_5    |    4     |
+| gesture_token_39.1 | gesture_token_39 |    1    |  99   |        Hand         |                           Back                           |     NA     |       unimanual        |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_17,goal_4,goal_24   |    14    |
+| gesture_token_39.2 | gesture_token_39 |    2    |  92   |        Hand         |           Body\|Face_Mouth\|Fingers_Hand\|Head           |     NA     |       unimanual        |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |   goal_17,goal_21,Play    |    13    |
+| gesture_token_39.3 | gesture_token_39 |    3    |  65   |        Hand         |                           Leg                            |     NA     |       unimanual        |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_17,goal_10,goal_12  |    7     |
+| gesture_token_39.4 | gesture_token_39 |    4    |  54   |       Fingers       |                            NA                            |     NA     |           NA           |        1        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     |  goal_17,goal_21,goal_4   |    9     |
+| gesture_token_39.5 | gesture_token_39 |    5    |  47   |        Hand         |                           Arm                            |     NA     |       unimanual        |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_17,goal_23,goal_18  |    10    |
+| gesture_token_39.6 | gesture_token_39 |    6    |  18   |         NA          |                            NA                            |     NA     |          Both          |        1        |    0     |               Social_unit_1,Social_unit_3,Social_unit_4               |     3     |   goal_25,goal_17,Play    |    6     |
+| gesture_token_39.7 | gesture_token_39 |    7    |  16   |        Foot         |                            NA                            |     NA     |           NA           |        1        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |   goal_17,goal_10,Play    |    7     |
+| gesture_token_4.1  | gesture_token_4  |    1    |  14   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     |  goal_18,Unknown,goal_1   |    8     |
+| gesture_token_40.1 | gesture_token_40 |    1    |  201  |         Arm         |                            NA                            |     NA     |       unimanual        |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |  goal_11,goal_10,goal_9   |    21    |
+| gesture_token_40.2 | gesture_token_40 |    2    |  24   |        Hand         |                            NA                            |     NA     |           NA           |        1        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |  goal_10,goal_11,goal_18  |    10    |
+| gesture_token_40.3 | gesture_token_40 |    3    |   8   |         NA          |                            NA                            |     NA     |          Both          |        1        |    0     |                      Social_unit_3,Social_unit_4                      |     2     |    goal_9,Play,goal_10    |    4     |
+| gesture_token_41.1 | gesture_token_41 |    1    |  370  |         Arm         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    goal_8,Play,goal_20    |    22    |
+| gesture_token_41.2 | gesture_token_41 |    2    |  191  |        Hand         |                            NA                            |     NA     |           NA           |        1        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |    goal_8,Play,goal_1     |    13    |
+| gesture_token_41.3 | gesture_token_41 |    3    |  16   |         Leg         |                            NA                            |     NA     |           NA           |        1        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |    goal_1,Play,Unknown    |    5     |
+| gesture_token_42.1 | gesture_token_42 |    1    |  36   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |  goal_18,Unknown,goal_12  |    8     |
+| gesture_token_43.1 | gesture_token_43 |    1    |  34   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |                      Social_unit_4,Social_unit_5                      |     2     | Play,PlayContinue,goal_12 |    5     |
+| gesture_token_44.1 | gesture_token_44 |    1    |  21   |         NA          |                            NA                            |     no     |           NA           |        1        |    0     |                      Social_unit_1,Social_unit_4                      |     2     |  goal_7,Unknown,goal_19   |    6     |
+| gesture_token_44.2 | gesture_token_44 |    2    |  19   |      Genitals       |                            NA                            |    yes     |           NA           |        2        |    0     |                      Social_unit_1,Social_unit_3                      |     2     |  goal_19,goal_10,goal_11  |    4     |
+| gesture_token_44.3 | gesture_token_44 |    3    |   7   |       Bottom        |                            NA                            |    yes     |           NA           |        2        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |  goal_1,goal_19,goal_22   |    5     |
+| gesture_token_45.1 | gesture_token_45 |    1    |  36   |         NA          |                            NA                            |     NA     |       unimanual        |        1        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     | Play,PlayContinue,Unknown |    8     |
+| gesture_token_45.2 | gesture_token_45 |    2    |  23   |        Head         |                            NA                            |     NA     |           NV           |        1        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |    Play,goal_18,goal_7    |    6     |
+| gesture_token_45.3 | gesture_token_45 |    3    |  16   |         NA          |                            NA                            |     NA     |   Alternating\|Both    |        1        |    0     |                             Social_unit_4                             |     1     |    Play,goal_7,goal_8     |    4     |
+| gesture_token_48.1 | gesture_token_48 |    1    |  23   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |                             Social_unit_4                             |     1     |   goal_21,Play,Unknown    |    4     |
+| gesture_token_49.1 | gesture_token_49 |    1    |  42   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |                      Social_unit_1,Social_unit_4                      |     2     |   Play,goal_21,Unknown    |    4     |
+| gesture_token_5.1  | gesture_token_5  |    1    |  12   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |               Social_unit_1,Social_unit_2,Social_unit_4               |     3     |       Play,goal_18        |    2     |
+| gesture_token_51.1 | gesture_token_51 |    1    |  213  |        Foot         |                            NA                            |     no     |       unimanual        |        3        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    Play,goal_7,Unknown    |    13    |
+| gesture_token_51.2 | gesture_token_51 |    2    |  93   |         NA          |                            NA                            |    yes     |      Alternating       |        2        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     | Play,Unknown,PlayContinue |    9     |
+| gesture_token_51.3 | gesture_token_51 |    3    |  49   |         NA          |                            NA                            |    yes     |       unimanual        |        2        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     |   Play,goal_12,Unknown    |    9     |
+| gesture_token_51.4 | gesture_token_51 |    4    |  38   |        Foot         |                            NA                            |     NA     |          Both          |        2        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |    Play,Unknown,goal_7    |    6     |
+| gesture_token_51.5 | gesture_token_51 |    5    |  13   |         NA          |                            NA                            |     no     |      Alternating       |        2        |    0     |                      Social_unit_4,Social_unit_5                      |     2     |    Play,goal_18,goal_3    |    7     |
+| gesture_token_51.6 | gesture_token_51 |    6    |   8   |        Hand         |                            NA                            |     NA     |           NA           |        1        |    0     |                             Social_unit_4                             |     1     |   Play,goal_13,goal_20    |    3     |
+| gesture_token_52.1 | gesture_token_52 |    1    |  12   |         NA          |                           Back                           |     no     |           NA           |        2        |    0     |                      Social_unit_3,Social_unit_4                      |     2     | Play,PlayContinue,goal_3  |    3     |
+| gesture_token_52.2 | gesture_token_52 |    2    |   8   |         NA          |                            NA                            |    yes     |           NA           |        1        |    0     |                             Social_unit_4                             |     1     |           Play            |    1     |
+| gesture_token_52.3 | gesture_token_52 |    3    |   6   |         NA          |                          Other                           |     no     |           NA           |        2        |    0     |                             Social_unit_4                             |     1     |     Play,PlayContinue     |    2     |
+| gesture_token_53.1 | gesture_token_53 |    1    |  16   |        Hand         |                            NA                            |     no     |           NA           |        2        |    0     |        Social_unit_1,Social_unit_3,Social_unit_4,Social_unit_5        |     4     |    Play,goal_8,goal_18    |    9     |
+| gesture_token_53.2 | gesture_token_53 |    2    |  12   |         NA          |                            NA                            |    yes     |           NA           |        1        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |   goal_8,goal_13,goal_1   |    6     |
+| gesture_token_53.3 | gesture_token_53 |    3    |   8   |       Fingers       |                            NA                            |     no     |           NA           |        2        |    0     |               Social_unit_2,Social_unit_4,Social_unit_5               |     3     |  goal_8,goal_13,goal_20   |    5     |
+| gesture_token_54.1 | gesture_token_54 |    1    |  259  |         Arm         |                            NA                            |     NA     |           NA           |        1        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     | Play,PlayContinue,goal_7  |    14    |
+| gesture_token_54.2 | gesture_token_54 |    2    |  18   |         Leg         |                            NA                            |     NA     |           NA           |        1        |    0     |                      Social_unit_2,Social_unit_4                      |     2     | Play,PlayContinue,goal_1  |    5     |
+| gesture_token_55.1 | gesture_token_55 |    1    |  20   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     |    goal_7,Play,Unknown    |    5     |
+| gesture_token_58.1 | gesture_token_58 |    1    |  144  |        Hand         |      Arm\|Face_Mouth\|Fingers_Hand\|Genitals\|Head       |     NA     |           NA           |        2        |    0     |        Social_unit_1,Social_unit_2,Social_unit_4,Social_unit_5        |     4     |    Play,goal_8,goal_21    |    21    |
+| gesture_token_58.2 | gesture_token_58 |    2    |  117  |         NA          |                            NA                            |     NA     |           NA           |        0        |    1     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    Play,goal_1,goal_8     |    20    |
+| gesture_token_58.3 | gesture_token_58 |    3    |  88   |        Hand         |                           Back                           |     NA     |           NA           |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    Play,Unknown,goal_1    |    17    |
+| gesture_token_58.4 | gesture_token_58 |    4    |  54   |        Hand         |                           Leg                            |     NA     |           NA           |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |    goal_1,Play,goal_20    |    12    |
+| gesture_token_58.5 | gesture_token_58 |    5    |  44   |     Hand\|Other     |                           Body                           |     NA     |           NA           |        2        |    0     | Social_unit_1,Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5 |     5     |   Play,goal_20,Unknown    |    14    |
+| gesture_token_8.1  | gesture_token_8  |    1    |  241  |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |        Social_unit_2,Social_unit_3,Social_unit_4,Social_unit_5        |     4     | Play,PlayContinue,Unknown |    4     |
+| gesture_token_9.1  | gesture_token_9  |    1    |  40   |         NA          |                            NA                            |     NA     |           NA           |        0        |    0     |               Social_unit_1,Social_unit_4,Social_unit_5               |     3     | Play,PlayContinue,goal_8  |    3     |
 
 What we can also see again from this table is the distribution of
 modifiers in establishing morphs - overall, *Body Part Signaller* was
@@ -1643,60 +1643,60 @@ ga_summary <- ga_summary %>%
 
 # Use kableExtra to format the table as an HTML table
 ga_summary %>%
-  kable(format = 'simple', row.names = NA, align = "c", booktabs = T, digits = 0) %>%
+  kable(format = 'pipe', row.names = NA, align = "c", booktabs = T, digits = 0) %>%
   kable_styling(font_size = 12)
 ```
 
-| Gesture_action N | umber_of_morphs C | ount C | omplexity |           Body_part_signaller            |                                            Body_part_contact R | epetition |            Laterality            |
-|------------------|-------------------|--------|:----------|:----------------------------------------:|---------------------------------------------------------------:|:----------|:--------------------------------:|
-| gesture_token_10 | 1                 | 23     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_17 | 1                 | 38     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_21 | 1                 | 38     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_22 | 1                 | 10     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_26 | 1                 | 49     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_29 | 1                 | 13     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_31 | 1                 | 31     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_35 | 1                 | 12     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_4  | 1                 | 14     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_42 | 1                 | 36     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_43 | 1                 | 34     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_48 | 1                 | 23     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_49 | 1                 | 42     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_5  | 1                 | 12     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_55 | 1                 | 20     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_8  | 1                 | 241    | 0         |                                          |                                                                |           |                                  |
-| gesture_token_9  | 1                 | 40     | 0         |                                          |                                                                |           |                                  |
-| gesture_token_1  | 2                 | 30     | 1         |                Arm, Hand                 |                                                                |           |                                  |
-| gesture_token_13 | 2                 | 98     | 1         |                Arm, Hand                 |                                                                |           |                                  |
-| gesture_token_3  | 4                 | 111    | 1         |                                          |     Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg, None |           |                                  |
-| gesture_token_32 | 2                 | 248    | 1         |                                          |                                                                |           |         Both, unimanual          |
-| gesture_token_37 | 2                 | 343    | 1         |             Bottom, Genitals             |                                                                |           |                                  |
-| gesture_token_41 | 3                 | 577    | 1         |              Arm, Hand, Leg              |                                                                |           |                                  |
-| gesture_token_54 | 2                 | 277    | 1         |                 Arm, Leg                 |                                                                |           |                                  |
-| gesture_token_11 | 4                 | 81     | 2         |                                          |                                                     Back, Body |           |         Both, unimanual          |
-| gesture_token_15 | 6                 | 202    | 2         |                                          |           Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg |           |         Both, unimanual          |
-| gesture_token_16 | 3                 | 109    | 2         |                                          |           Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg |           |         Both, unimanual          |
-| gesture_token_2  | 6                 | 850    | 2         |                                          |                         Arm, Back, Body, Face_Mouth, Head, Leg |           |         Both, unimanual          |
-| gesture_token_24 | 2                 | 50     | 2         |             Face_Mouth, Hand             |                                                                |           |          NV, unimanual           |
-| gesture_token_36 | 7                 | 639    | 2         | Arm, Back, Body, Bottom, Foot, Head, Leg |                                                                |           |          NV, unimanual           |
-| gesture_token_38 | 4                 | 182    | 2         |                                          |                 Arm, Back, Body, Face_Mouth, Fingers_Hand, Leg |           |         Both, unimanual          |
-| gesture_token_40 | 3                 | 233    | 2         |                Arm, Hand                 |                                                                |           |         Both, unimanual          |
-| gesture_token_44 | 3                 | 47     | 2         |             Bottom, Genitals             |                                                                | no, yes   |                                  |
-| gesture_token_45 | 3                 | 75     | 2         |                   Head                   |                                                                |           | Alternating, Both, NV, unimanual |
-| gesture_token_52 | 3                 | 26     | 2         |                                          |                                                    Back, Other | no, yes   |                                  |
-| gesture_token_53 | 3                 | 36     | 2         |              Fingers, Hand               |                                                                | no, yes   |                                  |
-| gesture_token_58 | 5                 | 447    | 2         |               Hand, Other                | Arm, Back, Body, Face_Mouth, Fingers_Hand, Genitals, Head, Leg |           |                                  |
-| ObjectShake      | 4                 | 572    | 3         |                Foot, Hand                |                                                                | no, yes   |   Alternating, Both, unimanual   |
-| gesture_token_19 | 6                 | 475    | 3         |                Foot, Hand                |                                                                | no, yes   |         Both, unimanual          |
-| gesture_token_39 | 7                 | 391    | 3         |           Fingers, Foot, Hand            |           Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg |           |         Both, unimanual          |
-| gesture_token_51 | 6                 | 414    | 3         |                Foot, Hand                |                                                                | no, yes   |   Alternating, Both, unimanual   |
-| gesture_token_20 | 6                 | 316    | 4         |           Fingers, Foot, Hand            | Arm, Back, Body, Face_Mouth, Fingers_Hand, Genitals, Head, Leg | no, yes   |   Alternating, Both, unimanual   |
+|  Gesture_action  | Number_of_morphs | Count | Complexity |           Body_part_signaller            |                       Body_part_contact                        | Repetition |            Laterality            |
+|:----------------:|:----------------:|:-----:|:----------:|:----------------------------------------:|:--------------------------------------------------------------:|:----------:|:--------------------------------:|
+| gesture_token_10 |        1         |  23   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_17 |        1         |  38   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_21 |        1         |  38   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_22 |        1         |  10   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_26 |        1         |  49   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_29 |        1         |  13   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_31 |        1         |  31   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_35 |        1         |  12   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_4  |        1         |  14   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_42 |        1         |  36   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_43 |        1         |  34   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_48 |        1         |  23   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_49 |        1         |  42   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_5  |        1         |  12   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_55 |        1         |  20   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_8  |        1         |  241  |     0      |                                          |                                                                |            |                                  |
+| gesture_token_9  |        1         |  40   |     0      |                                          |                                                                |            |                                  |
+| gesture_token_1  |        2         |  30   |     1      |                Arm, Hand                 |                                                                |            |                                  |
+| gesture_token_13 |        2         |  98   |     1      |                Arm, Hand                 |                                                                |            |                                  |
+| gesture_token_3  |        4         |  111  |     1      |                                          |   Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg, None   |            |                                  |
+| gesture_token_32 |        2         |  248  |     1      |                                          |                                                                |            |         Both, unimanual          |
+| gesture_token_37 |        2         |  343  |     1      |             Bottom, Genitals             |                                                                |            |                                  |
+| gesture_token_41 |        3         |  577  |     1      |              Arm, Hand, Leg              |                                                                |            |                                  |
+| gesture_token_54 |        2         |  277  |     1      |                 Arm, Leg                 |                                                                |            |                                  |
+| gesture_token_11 |        4         |  81   |     2      |                                          |                           Back, Body                           |            |         Both, unimanual          |
+| gesture_token_15 |        6         |  202  |     2      |                                          |      Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg      |            |         Both, unimanual          |
+| gesture_token_16 |        3         |  109  |     2      |                                          |      Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg      |            |         Both, unimanual          |
+| gesture_token_2  |        6         |  850  |     2      |                                          |             Arm, Back, Body, Face_Mouth, Head, Leg             |            |         Both, unimanual          |
+| gesture_token_24 |        2         |  50   |     2      |             Face_Mouth, Hand             |                                                                |            |          NV, unimanual           |
+| gesture_token_36 |        7         |  639  |     2      | Arm, Back, Body, Bottom, Foot, Head, Leg |                                                                |            |          NV, unimanual           |
+| gesture_token_38 |        4         |  182  |     2      |                                          |         Arm, Back, Body, Face_Mouth, Fingers_Hand, Leg         |            |         Both, unimanual          |
+| gesture_token_40 |        3         |  233  |     2      |                Arm, Hand                 |                                                                |            |         Both, unimanual          |
+| gesture_token_44 |        3         |  47   |     2      |             Bottom, Genitals             |                                                                |  no, yes   |                                  |
+| gesture_token_45 |        3         |  75   |     2      |                   Head                   |                                                                |            | Alternating, Both, NV, unimanual |
+| gesture_token_52 |        3         |  26   |     2      |                                          |                          Back, Other                           |  no, yes   |                                  |
+| gesture_token_53 |        3         |  36   |     2      |              Fingers, Hand               |                                                                |  no, yes   |                                  |
+| gesture_token_58 |        5         |  447  |     2      |               Hand, Other                | Arm, Back, Body, Face_Mouth, Fingers_Hand, Genitals, Head, Leg |            |                                  |
+|   ObjectShake    |        4         |  572  |     3      |                Foot, Hand                |                                                                |  no, yes   |   Alternating, Both, unimanual   |
+| gesture_token_19 |        6         |  475  |     3      |                Foot, Hand                |                                                                |  no, yes   |         Both, unimanual          |
+| gesture_token_39 |        7         |  391  |     3      |           Fingers, Foot, Hand            |      Arm, Back, Body, Face_Mouth, Fingers_Hand, Head, Leg      |            |         Both, unimanual          |
+| gesture_token_51 |        6         |  414  |     3      |                Foot, Hand                |                                                                |  no, yes   |   Alternating, Both, unimanual   |
+| gesture_token_20 |        6         |  316  |     4      |           Fingers, Foot, Hand            | Arm, Back, Body, Face_Mouth, Fingers_Hand, Genitals, Head, Leg |  no, yes   |   Alternating, Both, unimanual   |
 
 ``` r
 ga_summary$Complexity %>% 
   table() %>% 
   data.frame() %>% 
-  kable(format = 'simple',
+  kable(format = 'pipe',
         col.names = c('Number of Modifiers', 'Frequency'),
         row.names = NA,
         align = "c",
@@ -1706,12 +1706,12 @@ ga_summary$Complexity %>%
 ```
 
 | Number of Modifiers | Frequency |
-|:--------------------|:----------|
-| 0                   | 17        |
-| 1                   | 7         |
-| 2                   | 13        |
-| 3                   | 4         |
-| 4                   | 1         |
+|:-------------------:|:---------:|
+|          0          |    17     |
+|          1          |     7     |
+|          2          |    13     |
+|          3          |     4     |
+|          4          |     1     |
 
 
 
@@ -1764,7 +1764,7 @@ morphs_without_clear_use <- morphs %>%
 # select relevant columns for morphs with clear use rules, create an HTML table, and style it
 morphs_with_clear_use %>% 
   select(gesture_action, cluster, rules) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1772,57 +1772,57 @@ morphs_with_clear_use %>%
   kable_styling(font_size = 9)
 ```
 
-| gesture_action c | luster |                    rules                    |
-|------------------|:-------|:-------------------------------------------:|
-| gesture_token_37 | 1      |                entropy.goal                 |
-| gesture_token_41 | 2      |                entropy.goal                 |
-| gesture_token_51 | 2      |                entropy.goal                 |
-| gesture_token_51 | 4      |                entropy.goal                 |
-| gesture_token_51 | 6      |               distinct.group                |
-| gesture_token_36 | 3      |                entropy.goal                 |
-| gesture_token_36 | 4      |                entropy.goal                 |
-| gesture_token_36 | 6      |                entropy.goal                 |
-| gesture_token_2  | 3      |                entropy.goal                 |
-| gesture_token_39 | 3      |                entropy.goal                 |
-| gesture_token_39 | 4      |                entropy.goal                 |
-| gesture_token_38 | 1      |                entropy.goal                 |
-| gesture_token_38 | 2      |                entropy.goal                 |
-| gesture_token_38 | 4      |        entropy.goal, distinct.group         |
-| gesture_token_58 | 4      |                entropy.goal                 |
-| gesture_token_16 | 3      |                entropy.goal                 |
-| gesture_token_19 | 2      |                entropy.goal                 |
-| gesture_token_15 | 6      |               distinct.group                |
-| gesture_token_20 | 4      |                entropy.goal                 |
-| gesture_token_20 | 6      |        entropy.goal, distinct.group         |
-| ObjectShake      | 1      |                entropy.goal                 |
-| gesture_token_45 | 3      |               distinct.group                |
-| gesture_token_44 | 2      |                entropy.goal                 |
-| gesture_token_52 | 2      | entropy.goal, distinct.group, distinct.goal |
-| gesture_token_52 | 3      |               distinct.group                |
-| gesture_token_43 | 1      |                  onlyMorph                  |
-| gesture_token_42 | 1      |                  onlyMorph                  |
-| gesture_token_29 | 1      |                  onlyMorph                  |
-| gesture_token_26 | 1      |                  onlyMorph                  |
-| gesture_token_55 | 1      |                  onlyMorph                  |
-| gesture_token_8  | 1      |                  onlyMorph                  |
-| gesture_token_4  | 1      |                  onlyMorph                  |
-| gesture_token_31 | 1      |                  onlyMorph                  |
-| gesture_token_9  | 1      |                  onlyMorph                  |
-| gesture_token_10 | 1      |                  onlyMorph                  |
-| gesture_token_17 | 1      |                  onlyMorph                  |
-| gesture_token_5  | 1      |                  onlyMorph                  |
-| gesture_token_21 | 1      |                  onlyMorph                  |
-| gesture_token_49 | 1      |                  onlyMorph                  |
-| gesture_token_48 | 1      |                  onlyMorph                  |
-| gesture_token_35 | 1      |                  onlyMorph                  |
-| gesture_token_22 | 1      |                  onlyMorph                  |
+|  gesture_action  | cluster |                    rules                    |
+|:----------------:|:-------:|:-------------------------------------------:|
+| gesture_token_37 |    1    |                entropy.goal                 |
+| gesture_token_41 |    2    |                entropy.goal                 |
+| gesture_token_51 |    2    |                entropy.goal                 |
+| gesture_token_51 |    4    |                entropy.goal                 |
+| gesture_token_51 |    6    |               distinct.group                |
+| gesture_token_36 |    3    |                entropy.goal                 |
+| gesture_token_36 |    4    |                entropy.goal                 |
+| gesture_token_36 |    6    |                entropy.goal                 |
+| gesture_token_2  |    3    |                entropy.goal                 |
+| gesture_token_39 |    3    |                entropy.goal                 |
+| gesture_token_39 |    4    |                entropy.goal                 |
+| gesture_token_38 |    1    |                entropy.goal                 |
+| gesture_token_38 |    2    |                entropy.goal                 |
+| gesture_token_38 |    4    |        entropy.goal, distinct.group         |
+| gesture_token_58 |    4    |                entropy.goal                 |
+| gesture_token_16 |    3    |                entropy.goal                 |
+| gesture_token_19 |    2    |                entropy.goal                 |
+| gesture_token_15 |    6    |               distinct.group                |
+| gesture_token_20 |    4    |                entropy.goal                 |
+| gesture_token_20 |    6    |        entropy.goal, distinct.group         |
+|   ObjectShake    |    1    |                entropy.goal                 |
+| gesture_token_45 |    3    |               distinct.group                |
+| gesture_token_44 |    2    |                entropy.goal                 |
+| gesture_token_52 |    2    | entropy.goal, distinct.group, distinct.goal |
+| gesture_token_52 |    3    |               distinct.group                |
+| gesture_token_43 |    1    |                  onlyMorph                  |
+| gesture_token_42 |    1    |                  onlyMorph                  |
+| gesture_token_29 |    1    |                  onlyMorph                  |
+| gesture_token_26 |    1    |                  onlyMorph                  |
+| gesture_token_55 |    1    |                  onlyMorph                  |
+| gesture_token_8  |    1    |                  onlyMorph                  |
+| gesture_token_4  |    1    |                  onlyMorph                  |
+| gesture_token_31 |    1    |                  onlyMorph                  |
+| gesture_token_9  |    1    |                  onlyMorph                  |
+| gesture_token_10 |    1    |                  onlyMorph                  |
+| gesture_token_17 |    1    |                  onlyMorph                  |
+| gesture_token_5  |    1    |                  onlyMorph                  |
+| gesture_token_21 |    1    |                  onlyMorph                  |
+| gesture_token_49 |    1    |                  onlyMorph                  |
+| gesture_token_48 |    1    |                  onlyMorph                  |
+| gesture_token_35 |    1    |                  onlyMorph                  |
+| gesture_token_22 |    1    |                  onlyMorph                  |
 
 For the following 17 gesture actions, all morphs have clear rules (i.e.,
 reduce uncertainty about goal or group):
 
 ``` r
 setdiff(morphs_with_clear_use$gesture_action, morphs_without_clear_use$gesture_action) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1830,8 +1830,8 @@ setdiff(morphs_with_clear_use$gesture_action, morphs_without_clear_use$gesture_a
   kable_styling(font_size = 9)
 ```
 
-|                  |
-|------------------|
+|        x         |
+|:----------------:|
 | gesture_token_43 |
 | gesture_token_42 |
 | gesture_token_29 |
@@ -1855,7 +1855,7 @@ rules:
 
 ``` r
 setdiff(morphs_without_clear_use$gesture_action, morphs_with_clear_use$gesture_action) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1863,8 +1863,8 @@ setdiff(morphs_without_clear_use$gesture_action, morphs_with_clear_use$gesture_a
   kable_styling(font_size = 9)
 ```
 
-|                  |
-|------------------|
+|        x         |
+|:----------------:|
 | gesture_token_13 |
 | gesture_token_40 |
 | gesture_token_53 |
@@ -1888,7 +1888,7 @@ morph_table <- morphs %>%
   ungroup()
 
 morph_table %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1896,50 +1896,50 @@ morph_table %>%
   kable_styling(font_size = 12)
 ```
 
-| gesture_action c | lear_rule n | o_clear_rule |
-|------------------|-------------|:-------------|
-| ObjectShake      | 1           | 3            |
-| gesture_token_1  | 0           | 2            |
-| gesture_token_10 | 1           | 0            |
-| gesture_token_11 | 0           | 4            |
-| gesture_token_13 | 0           | 2            |
-| gesture_token_15 | 1           | 5            |
-| gesture_token_16 | 1           | 2            |
-| gesture_token_17 | 1           | 0            |
-| gesture_token_19 | 1           | 5            |
-| gesture_token_2  | 1           | 5            |
-| gesture_token_20 | 2           | 4            |
-| gesture_token_21 | 1           | 0            |
-| gesture_token_22 | 1           | 0            |
-| gesture_token_24 | 0           | 2            |
-| gesture_token_26 | 1           | 0            |
-| gesture_token_29 | 1           | 0            |
-| gesture_token_3  | 0           | 4            |
-| gesture_token_31 | 1           | 0            |
-| gesture_token_32 | 0           | 2            |
-| gesture_token_35 | 1           | 0            |
-| gesture_token_36 | 3           | 4            |
-| gesture_token_37 | 1           | 1            |
-| gesture_token_38 | 3           | 1            |
-| gesture_token_39 | 2           | 5            |
-| gesture_token_4  | 1           | 0            |
-| gesture_token_40 | 0           | 3            |
-| gesture_token_41 | 1           | 2            |
-| gesture_token_42 | 1           | 0            |
-| gesture_token_43 | 1           | 0            |
-| gesture_token_44 | 1           | 2            |
-| gesture_token_45 | 1           | 2            |
-| gesture_token_48 | 1           | 0            |
-| gesture_token_49 | 1           | 0            |
-| gesture_token_5  | 1           | 0            |
-| gesture_token_51 | 3           | 3            |
-| gesture_token_52 | 2           | 1            |
-| gesture_token_53 | 0           | 3            |
-| gesture_token_54 | 0           | 2            |
-| gesture_token_55 | 1           | 0            |
-| gesture_token_58 | 1           | 4            |
-| gesture_token_8  | 1           | 0            |
-| gesture_token_9  | 1           | 0            |
+|  gesture_action  | clear_rule | no_clear_rule |
+|:----------------:|:----------:|:-------------:|
+|   ObjectShake    |     1      |       3       |
+| gesture_token_1  |     0      |       2       |
+| gesture_token_10 |     1      |       0       |
+| gesture_token_11 |     0      |       4       |
+| gesture_token_13 |     0      |       2       |
+| gesture_token_15 |     1      |       5       |
+| gesture_token_16 |     1      |       2       |
+| gesture_token_17 |     1      |       0       |
+| gesture_token_19 |     1      |       5       |
+| gesture_token_2  |     1      |       5       |
+| gesture_token_20 |     2      |       4       |
+| gesture_token_21 |     1      |       0       |
+| gesture_token_22 |     1      |       0       |
+| gesture_token_24 |     0      |       2       |
+| gesture_token_26 |     1      |       0       |
+| gesture_token_29 |     1      |       0       |
+| gesture_token_3  |     0      |       4       |
+| gesture_token_31 |     1      |       0       |
+| gesture_token_32 |     0      |       2       |
+| gesture_token_35 |     1      |       0       |
+| gesture_token_36 |     3      |       4       |
+| gesture_token_37 |     1      |       1       |
+| gesture_token_38 |     3      |       1       |
+| gesture_token_39 |     2      |       5       |
+| gesture_token_4  |     1      |       0       |
+| gesture_token_40 |     0      |       3       |
+| gesture_token_41 |     1      |       2       |
+| gesture_token_42 |     1      |       0       |
+| gesture_token_43 |     1      |       0       |
+| gesture_token_44 |     1      |       2       |
+| gesture_token_45 |     1      |       2       |
+| gesture_token_48 |     1      |       0       |
+| gesture_token_49 |     1      |       0       |
+| gesture_token_5  |     1      |       0       |
+| gesture_token_51 |     3      |       3       |
+| gesture_token_52 |     2      |       1       |
+| gesture_token_53 |     0      |       3       |
+| gesture_token_54 |     0      |       2       |
+| gesture_token_55 |     1      |       0       |
+| gesture_token_58 |     1      |       4       |
+| gesture_token_8  |     1      |       0       |
+| gesture_token_9  |     1      |       0       |
 
 We can therefore differentiate and remove the gesture actions where
 clear rules determine the morphs, and look more specifically at those
@@ -2112,7 +2112,7 @@ morph.accuracy <- morph.prediction$result %>%
 
 bind_rows(gesture.record.accuracy, 
           morph.accuracy) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -2121,9 +2121,9 @@ bind_rows(gesture.record.accuracy,
 ```
 
 | accuracy.nb | accuracy.random | accuracy.context |      data      |
-|:------------|:----------------|:-----------------|:--------------:|
-| 0.38        | 0.01            | 0.26             | Gesture Record |
-| 0.34        | 0.01            | 0.32             |     Morph      |
+|:-----------:|:---------------:|:----------------:|:--------------:|
+|    0.38     |      0.01       |       0.26       | Gesture Record |
+|    0.34     |      0.01       |       0.32       |     Morph      |
 
 ``` r
 #save.image("~/repertoire_save.RData")
