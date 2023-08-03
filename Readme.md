@@ -2129,9 +2129,13 @@ bind_rows(gesture.record.accuracy,
 #save.image("~/repertoire_save.RData")
 ```
 
-Looks to me as if, indeed, there is a small increase in prediction
-accuracy when using the morphs (at least, there is no decrease). This
-would indicate that using the morphs improves out prediction accuracy.
+Looks to me as if, when looking at accuracy by token, gesture actions
+perform better in learning goals. However, that is only half the
+picture - when looking at the average performance across goals, morphs
+produce better results. This would indicate that morphs perform better
+in correctly classifying rare goals, probably because Naive Bayes always
+assigns the most common goal to any element, so the higher split of the
+morphs allows for most detailed statistical learning.
 
 ``` r
 target_improved <- 
@@ -2152,28 +2156,6 @@ target_improved <-
   xlab("Goal") +
   ylab("Correct Predictions") +
   ylim(0,1)
-
-element_improved <- 
-  morph.prediction$by_element %>% 
-  separate(element, into = c('element', 'cluster')) %>% 
-  group_by(element) %>% 
-  summarise(mean.morph = mean(mean)) %>% 
-  ungroup() %>% 
-  mutate(element.morph = element) %>% 
-  left_join(
-    gesture.record.prediction$by_element %>% 
-    mutate(element.ga = element,
-         mean.ga = mean),
-    by = c('element' = 'element')) %>% 
-  ggplot() +
-   geom_segment( aes(x=element, xend=element, y=mean.ga, yend=mean.morph), color="grey") +
-  geom_point( aes(x=element, y=mean.ga), color= 'blue', size = 4, alpha = 0.5) +
-  geom_point( aes(x=element, y=mean.morph), color= 'red', size = 4, alpha = 0.5 ) +
-  coord_flip()+
-  theme_minimal() +
-  xlab("Gesture Action") +
-  ylab("Correct Predictions") +
-  ylim(0,1)
 ```
 
 ``` r
@@ -2185,16 +2167,7 @@ src="Morph_Walkthrough_files/figure-commonmark/target_pred_accuracy-1.png"
 data-fig-align="center"
 alt="Prediction accuracy in a Naive Bayes classifier for different goals based on gesture actions (blue) and morphs (red)." />
 
-``` r
-element_improved + ggtitle('Correct Predictions by Elements')
-```
-
-<img
-src="Morph_Walkthrough_files/figure-commonmark/element_pred_accuracy-1.png"
-data-fig-align="center"
-alt="Prediction accuracy in a Naive Bayes classifier for different goals based on gesture actions (blue) and morphs (red)." />
-
 Looking at this in more detail, we see that the picture is more complex:
-for many goals and gesture actions, predictive accuracy is actually
-higher for morphs - the picture is distorted somewhat by some common
-contexts, such as Play, where gesture actions make better predictions.
+for many goals, predictive accuracy is actually higher for morphs - the
+picture is distorted somewhat by some common contexts, such as Play,
+where gesture actions make better predictions.

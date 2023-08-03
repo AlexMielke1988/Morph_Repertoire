@@ -1578,7 +1578,7 @@ bind_rows(gesture.record.accuracy,
 ```
 
 
-Looks to me as if, indeed, there is a small increase in prediction accuracy when using the morphs (at least, there is no decrease). This would indicate that using the morphs improves out prediction accuracy.
+Looks to me as if, when looking at accuracy by token, gesture actions perform better in learning goals. However, that is only half the picture - when looking at the average performance across goals, morphs produce better results. This would indicate that morphs perform better in correctly classifying rare goals, probably because Naive Bayes always assigns the most common goal to any element, so the higher split of the morphs allows for most detailed statistical learning.
 
 ```{r plot_improvement, cache=FALSE}
 
@@ -1601,29 +1601,6 @@ target_improved <-
   ylab("Correct Predictions") +
   ylim(0,1)
 
-element_improved <- 
-  morph.prediction$by_element %>% 
-  separate(element, into = c('element', 'cluster')) %>% 
-  group_by(element) %>% 
-  summarise(mean.morph = mean(mean)) %>% 
-  ungroup() %>% 
-  mutate(element.morph = element) %>% 
-  left_join(
-    gesture.record.prediction$by_element %>% 
-    mutate(element.ga = element,
-         mean.ga = mean),
-    by = c('element' = 'element')) %>% 
-  ggplot() +
-   geom_segment( aes(x=element, xend=element, y=mean.ga, yend=mean.morph), color="grey") +
-  geom_point( aes(x=element, y=mean.ga), color= 'blue', size = 4, alpha = 0.5) +
-  geom_point( aes(x=element, y=mean.morph), color= 'red', size = 4, alpha = 0.5 ) +
-  coord_flip()+
-  theme_minimal() +
-  xlab("Gesture Action") +
-  ylab("Correct Predictions") +
-  ylim(0,1)
-  
-
 ```
 
 
@@ -1632,8 +1609,4 @@ target_improved + ggtitle('Correct Predictions by Goals')
 ```
 
 
-```{r element_pred_accuracy, fig.align='center', fig.width=12, fig.height=12, message=F, echo = TRUE, cache = TRUE, fig.cap = "Prediction accuracy in a Naive Bayes classifier for different goals based on gesture actions (blue) and morphs (red)."}
-element_improved + ggtitle('Correct Predictions by Elements')
-```
-
-Looking at this in more detail, we see that the picture is more complex: for many goals and gesture actions, predictive accuracy is actually higher for morphs - the picture is distorted somewhat by some common contexts, such as Play, where gesture actions make better predictions.
+Looking at this in more detail, we see that the picture is more complex: for many goals, predictive accuracy is actually higher for morphs - the picture is distorted somewhat by some common contexts, such as Play, where gesture actions make better predictions.
