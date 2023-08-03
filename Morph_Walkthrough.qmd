@@ -132,7 +132,7 @@ gesture actions that have at least `r cutoff_action` occurrences. The following 
   data.frame() %>% 
   rename('Gesture_record' = '.') %>% 
   rename('Frequency' = 'Freq')  %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -273,7 +273,7 @@ specificity by not occurring in any of the other clusters (specificity
 xx.OS$cluster.info %>% 
   filter(probability == 1 & 
            specificity == 1) %>% 
-  kable(format = 'simple',
+  kable(format = 'pipe',
         row.names = NA,
         align = "c",
         booktabs = T) %>% 
@@ -349,7 +349,7 @@ entropy.OS %>%
          entropy.observed,
          entropy.expected,
          pvalue.entropy) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -378,7 +378,7 @@ entropy.OS.cluster %>%
          entropy.observed,
          entropy.expected,
          pvalue.entropy) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -786,7 +786,7 @@ sapply(purrr::transpose(gesture_clusters)$full.data,
   select(-Var1) %>% 
   rename('Number_of_moprhs' = '.',
          'Count' = 'Freq') %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T) %>% 
@@ -832,7 +832,7 @@ split_importance %>%
   rownames_to_column(var = "variable") %>% 
   arrange(variable) %>% 
   column_to_rownames('variable') %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -933,7 +933,7 @@ clear_morphs <- clear_morphs %>%
   replace_na(list('clear.rule' = 0))
 
 clear_morphs %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -958,7 +958,7 @@ additional.rules <- additional_rules(
 # display table of rules
 additional.rules %>%
   filter(!(probability == 1 & specificity == 1)) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1180,7 +1180,7 @@ morph_rules$nr.goals <-
 
 ```{r table_rules}
 morph_rules %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1278,7 +1278,7 @@ ga_summary <- ga_summary %>%
 
 # Use kableExtra to format the table as an HTML table
 ga_summary %>%
-  kable(format = 'simple', row.names = NA, align = "c", booktabs = T, digits = 0) %>%
+  kable(format = 'pipe', row.names = NA, align = "c", booktabs = T, digits = 0) %>%
   kable_styling(font_size = 12)
 
 
@@ -1290,7 +1290,7 @@ ga_summary %>%
 ga_summary$Complexity %>% 
   table() %>% 
   data.frame() %>% 
-  kable(format = 'simple',
+  kable(format = 'pipe',
         col.names = c('Number of Modifiers', 'Frequency'),
         row.names = NA,
         align = "c",
@@ -1353,7 +1353,7 @@ morphs_without_clear_use <- morphs %>%
 # select relevant columns for morphs with clear use rules, create an HTML table, and style it
 morphs_with_clear_use %>% 
   select(gesture_action, cluster, rules) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1367,7 +1367,7 @@ For the following `r setdiff(morphs_with_clear_use$gesture_action, morphs_withou
 
 ```{r table_clear}
 setdiff(morphs_with_clear_use$gesture_action, morphs_without_clear_use$gesture_action) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1379,7 +1379,7 @@ For the following `r setdiff(morphs_without_clear_use$gesture_action, morphs_wit
 
 ```{r table_unclear}
 setdiff(morphs_without_clear_use$gesture_action, morphs_with_clear_use$gesture_action) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1401,7 +1401,7 @@ morph_table <- morphs %>%
   ungroup()
 
 morph_table %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
@@ -1567,7 +1567,7 @@ morph.accuracy <- morph.prediction$result %>%
 
 bind_rows(gesture.record.accuracy, 
           morph.accuracy) %>% 
-  kable(format = 'simple', 
+  kable(format = 'pipe', 
         row.names = NA,
         align = "c",
         booktabs = T, 
