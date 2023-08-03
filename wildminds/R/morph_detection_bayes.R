@@ -703,7 +703,8 @@ possible_combinations <- function(elements, maxlen) {
 
 additional_rules <- function(cluster_info, summary_morphs) {
   additional.rules <-
-    lapply(setdiff(cluster_info %>% bind_rows %>% pull(cluster), summary_morphs), function(x) {
+    lapply(setdiff(cluster_info %>% bind_rows %>% pull(cluster),
+                   summary_morphs), function(x) {
       # select gesture action and cluster number
 
       add_rules <-
