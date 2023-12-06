@@ -22,7 +22,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE, 
                       warning = FALSE)
 options(digits = 3)
-library(mclust)
+library(kableExtra)
 library(knitr)
 library(tibble)
 library(ggplot2)
@@ -30,12 +30,11 @@ library(tidyverse)
 library(tidymodels)
 library(embed)
 library(BayesLCA)
+library(rpart.plot)
 library(discrim)
 library(naivebayes)
-library(rpart.plot)
-library(parallel)
-library(doParallel)
-library(kableExtra)
+library(purrr)
+library(infotheo)
 ```
 
 
@@ -1591,15 +1590,21 @@ target_improved <-
     mutate(target.ga = target,
          mean.ga = mean),
     by = c('target' = 'target')) %>% 
+  mutate(diff = round(mean.morph - mean.ga, 2)) %>% 
+  arrange(diff) %>% 
+  mutate(diff = abs(diff)) %>% 
+  mutate(target = factor(as.character(target), levels = as.character(target))) %>% 
   ggplot() +
    geom_segment( aes(x=target, xend=target, y=mean.ga, yend=mean.morph), color="grey") +
   geom_point( aes(x=target, y=mean.ga), color= 'blue', size = 4, alpha = 0.5 ) +
-  geom_point( aes(x=target, y=mean.morph), color= 'red', size = 4, alpha = 0.5 ) +
+  geom_point( aes(x=target, y=mean.morph), color= 'red', size = 4, alpha = 0.5 ) + 
+  geom_text(aes(label = diff, y = 1.1, x = target),
+            size = 2.5) +
   coord_flip()+
   theme_minimal() +
   xlab("Goal") +
   ylab("Correct Predictions") +
-  ylim(0,1)
+  ylim(0,1.1)
 
 ```
 
